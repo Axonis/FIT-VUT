@@ -17,7 +17,7 @@
     INC - 19/20
     IOS - 1. - 15/15
           2. - 15/15
-    IZG - Cvičenia - 16.5/18 (3. a 6. cvičenia za 2/3)
+    IZG - Cvičenia - 16/18 (3. a 6. cvičenia za 2/3)
           Projekt - 17/18
          
 ## 3.semester - 2BITZ
