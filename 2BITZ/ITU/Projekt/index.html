@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+
+        <meta charset="utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+        <title>Autoskola</title>
+
+        <!-- Bootstrap Core CSS -->
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- Custom CSS -->
+        <link href="css/style.css" rel="stylesheet">
+
+        <!-- Custom Fonts -->
+        <link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
+
+        <!-- Template js -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.appear/0.3.3/jquery.appear.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
+        <script src="js/script.js"></script>
+        <script src="js/login.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+
+        <!-- charts js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
+
+        <!--[if lt IE 9]>
+
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <style media="print">
+            body > * { display: none }
+            #print { display: block; font-size: 9px}
+            #print .row { display: block; font-size: 9px}
+            .glyphicon { display: none }
+            .modal-header {display : none}
+        </style>
+    </head>
+
+    <body>
+
+        <!-- Start Logo Section -->
+        <section id="logo-section" class="text-center">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="logo text-center">
+                            <h1>Autoškola</h1>
+                            <span>Výuková aplikácia</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- End Logo Section -->
+
+
+        <!-- Start Main Body Section -->
+        <div class="mainbody-section text-center">
+            <script>document.getElementById('slider_id').style.opacity=1</script>
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-md-3">
+
+                        <div class="menu-item blue">
+                            <a href="#test-modal" data-toggle="modal">
+                                <i class="glyphicon glyphicon-list-alt"></i>
+                                <p>Skúšobný test</p>
+                            </a>
+                        </div>
+
+                        <div class="menu-item green">
+                            <a href="#exercise-modal" data-toggle="modal">
+                                <i class="glyphicon glyphicon-file"></i>
+                                <p>Cvičný test</p>
+                            </a>
+                        </div>
+
+                        <div class="menu-item light-red">
+                            <a href="#knowledge-modal" data-toggle="modal">
+                                <i class="glyphicon glyphicon-adjust"></i>
+                                <p>Test podľa znalostí</p>
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <!-- Start Carousel Section -->
+                        <div class="home-slider" id="slider_id">
+                            <div id="carousel-example-generic" class="carousel slide" data-ride="carousel" style="padding-bottom: 30px;">
+                                <!-- Indicators -->
+                                <ol class="carousel-indicators">
+                                    <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+                                    <li data-target="#carousel-example-generic" data-slide-to="1"></li>
+                                    <li data-target="#carousel-example-generic" data-slide-to="2"></li>
+                                </ol>
+
+                                <!-- Wrapper for slides -->
+                                <div class="carousel-inner">
+                                    <div class="item active">
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/about-03.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="item">
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/about-02.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="item">
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/about-01.jpg" class="img-responsive" alt="">
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                        <!-- Start Carousel Section -->
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="menu-item azure responsive">
+                                    <a href="#crossroad-modal" data-toggle="modal">
+                                        <i class="glyphicon glyphicon-road"></i>
+                                        <p>Test s križovatkami</p>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="menu-item light-orange responsive-2">
+                                    <a href="#sign-modal" data-toggle="modal">
+                                        <i class="glyphicon glyphicon-warning-sign"></i>
+                                        <p>Test so značkami</p>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <div class="menu-item dark-red script_pom_2">
+                            <a class="script_pom_2" href="#login-modal" data-toggle="modal" onclick="removeLogin();">
+                                <i  class="glyphicon glyphicon-user script_pom_2"></i>
+                                <p id="status_id" class="script_pom_2"></p>
+                                <script>document.getElementById("status_id").innerHTML = "Správa užívateľov";</script>
+                            </a>
+                        </div>
+
+                        <div class="menu-item dark-blue">
+                            <a id="stats_btn_id" href="#" onclick="statsValidate();" data-toggle="modal">
+                                <i class="glyphicon glyphicon-stats"></i>
+                                <p>Štatistiky</p>
+                            </a>
+                        </div>
+
+                        <div class="menu-item dark-purple">
+                            <a href="#material-modal" data-toggle="modal">
+                                <i class="glyphicon glyphicon-book"></i>
+                                <p>Učebné texty</p>
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Main Body Section -->
+
+        <!-- Start Copyright Section -->
+        <div class="copyright text-center">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div>Design & Developed by Beer_team</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Copyright Section -->
+
+
+        <script>
+            function hideContent() {
+                document.getElementById("cresults").innerHTML = "Úspešnosť: - %";
+                document.getElementById("sresults").innerHTML = "Úspešnosť: - %";
+                $(".options").hide();
+                $(".exercise").hide();
+                $(".test").hide();
+                $(".question").show(1000);
+                $(".glyphicon-menu-right").hide();
+                $(".glyphicon-menu-left").hide();
+                if($(".quiz label").hasClass("active")){
+                    $(".quiz label").removeClass("active");
+                }
+                if($(".quiz label").hasClass("btn-success")){
+                    $(".quiz label").removeClass("btn-success").addClass("btn-primary");
+                }
+                if($(".quiz label").hasClass("btn-danger")){
+                    $(".quiz label").removeClass("btn-danger").addClass("btn-primary");
+                }
+                if($("ul li").hasClass("active")){
+                    $("ul li").removeClass("active");
+                    $("ul li:first-child").addClass("active");
+                }
+                if($(".tab-content div").hasClass("active in")){
+                    $(".tab-content div").removeClass("active in");
+                    $(".tab-content div:first-child").addClass("active in");
+                }
+            }
+        </script> <!-- hideContent script for modal X -->
+
+
+         <!-- Start test Section -->
+        <div class="section-modal modal fade" id="test-modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-content bg-img">
+                <div class="close-modal" data-dismiss="modal" onclick="hideContent()">
+                    <div class="lr">
+                        <div class="rl">
+                        </div>
+                    </div>
+                </div>
+
+                        <div class="container-fluid">
+                            <div class="modal-dialog">
+
+                                <div class="tab-content question">
+                                    <div class="modal-header">
+                                        <h3>Zvoľ test</h3>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <div class="col-md-3 col-sm-6 col-xs-6">
+                                            <div class="number">
+                                                <i class="glyphicon glyphicon-list-alt blue"></i>
+                                            </div>
+                                        </div><!-- /.col-md-3 -->
+
+                                        <div class="col-md-3 col-sm-6 col-xs-6">
+                                            <div class="number">
+                                                <i class="glyphicon glyphicon-list-alt green"></i>
+                                            </div>
+
+                                        </div><!-- /.col-md-3 -->
+                                        <div class="col-md-3 col-sm-6 col-xs-6">
+                                            <div class="number">
+                                                <i class="glyphicon glyphicon-list-alt light-red"></i>
+                                            </div>
+                                        </div><!-- /.col-md-3 -->
+
+                                        <div class="col-md-3 col-sm-6 col-xs-6">
+                                            <div class="number">
+                                                <i class="glyphicon glyphicon-list-alt light-orange"></i>
+                                            </div>
+                                        </div><!-- /.col-md-3 -->
+
+                                        <div class="col-md-3 col-sm-6 col-xs-6">
+                                            <div class="number">
+                                                <i class="glyphicon glyphicon-list-alt azure"></i>
+                                            </div>
+                                        </div><!-- /.col-md-3 -->
+
+                                        <div class="col-md-3 col-sm-6 col-xs-6">
+                                            <div class="number">
+                                                <i class="glyphicon glyphicon-list-alt dark-purple"></i>
+                                            </div>
+                                        </div><!-- /.col-md-3 -->
+
+                                        <div class="col-md-3 col-sm-6 col-xs-6">
+                                            <div class="number">
+                                                <i class="glyphicon glyphicon-list-alt dark-blue"></i>
+                                            </div>
+                                        </div><!-- /.col-md-3 -->
+
+                                        <div class="col-md-3 col-sm-6 col-xs-6">
+                                            <div class="number">
+                                                <i class="glyphicon glyphicon-list-alt dark-red"></i>
+                                            </div>
+                                        </div><!-- /.col-md-3 -->
+
+                                        <div class="text-center">
+                                                <i class="glyphicon glyphicon-print" onClick="window.print()"></i>
+                                        </div>
+                                    </div>
+                                </div> <!-- ./question -->
+
+
+                                <div class="modal-content test">
+                                    <div class="tab-content">
+                                        <div id="t1" class="tab-pane fade in active">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">1</span> Dať prednosť v jazde sa rozumie</h3>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">povinnosť účastíka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel náhle zmeniť smer alebo rýchlosť jazdy</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">povinnosť účastníka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel zmeniť smer jazdy, môže však zmeniť rýchlosť jazdy</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">povinnosť účastníka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel zmeniť rýchlosť jazdy, môže však zmeniť smer jazdy</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t2" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">2</span> Motorové vozidlo musí mať počas jazdy rozsvietené</h3>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">svetlá vo vnútri vozidla</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">diaľkové svetlomety</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block right2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">stretávacie svetlomety alebo im na roveň postavené osvetlenie</label></div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <div id="t3" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">3</span>Vodič</h3>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">môže počas vedenia vozidla telefonovať alebo inak používať telefónny prístroj</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">nesmie počas vedenie vozidla telefonovať alebo inak používať telefónny prístroj okrem telefonovania s použitím systému voľné ruky</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">nesmie počas vedenia vozidla počúvať rádio</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t4" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">4</span> Ak jazdné pruhy nie sú na vozovke vyznačené, jazdným pruhom sa rozumie časť vozovky dovoľujúca jazdu vozidiel</h3>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">s troma a viacerými kolesami</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">najmenej s dvoma kolesami v jazdnom prúde za sebou</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">len s dvoma kolesami v jazdnom prúde za sebou</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t5" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">5</span> V motorovom vozidle sa smú na miestach na to vyhradených prepravovať osoby len do</h3>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong5"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">80 % prípustnej užitočnej hmotnosti vozidla</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right5"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">prípustnej užitočnej hmotnosti vozidla, pritom počet prepravovaných osôb nesmie byť vyšší, ako je počet povolených miest uvedených v osvedčení o evidencii</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong5"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">pohotovostnej hmotnosti vozidla</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t6" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">6</span> Táto dopravná značka znamená</h3>
+                                                <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img01.jpg" class="img-responsive" alt="">
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong6"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">najnižšia dovolená rýchlosť</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right6"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">najvyššia dovolená rýchlosť</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong6"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">odporúčaná rýchlosť</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t7" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">7</span>Táto dopravná značka znamená</h3>
+                                                <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img02.jpg" class="img-responsive" alt="">
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong7"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">návesť pred križovatkou</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right7"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">návesť pred slepou cestou</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong7"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zákaz odbočovania vpravo</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t8" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">8</span>Táto dopravná značka znamená</h3>
+                                                <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img03.jpg" class="img-responsive" alt="">
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong8"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">vyznačuje úsek, kde je zakázané zastavenie</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong8"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">oddeľuje okraj vozovky od cestičky pre cyklistov</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block right8"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">vyznačuje úsek, kde je zakázané státie</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t9" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">9</span>Táto dopravná značka znamená</h3>
+                                                <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img04.jpg" class="img-responsive" alt="">
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong9"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zákaz státia na krajnici</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right9"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">odletujúci štrk</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong9"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">nebezpečenstvo poškodenia pneumatík</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t10" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">10</span> Zelené vozidlo vojde do križovatky ako</h3>
+                                                <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img03.jpg" class="img-responsive" alt="">
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right10"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">druhé</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong10"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">tretie</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong10"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">prvé</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t11" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">11</span> Ako posledné prejde cez križovatku</h3>
+                                                <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img01.jpg" class="img-responsive" alt="">
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right11"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">červené vozidlo</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong11"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zelené vozidlo</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong11"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">modré vozidlo</label></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="t12" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3><span class="label label-primary qid">12</span> Vozidlá prejdú cez križovatku v tomto poradí</h3>
+                                                <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img02.jpg" class="img-responsive" alt="">
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="quiz" data-toggle="buttons">
+                                                    <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong12"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">1. zelené, 2. modré, 3. vaše vozidlo</label></div>
+                                                    <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong12"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">1. modré, 2. zelené, 3. vaše vozidlo</label></div>
+                                                    <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block right12"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">1. modré, 2. vaše vozidlo, 3. zelené</label></div>
+                                                </div>
+                                                <hr class="test-vyhodnotit">
+                                                <a data-toggle="tab" href="#tfinish"><div class="btn btn-lg btn-info btn-block btn test-vyhodnotit">Vyhodnotiť</div></a>
+                                            </div>
+                                        </div>
+
+                                        <div id="tfinish" class="tab-pane fade">
+                                            <div class="modal-header">
+                                                <h3>Výsledky</h3>
+                                            </div>
+                                            <div class="modal-body text-center">
+                                                <h4 id="tresults"></h4>
+                                            </div>
+                                        </div>
+
+                                    </div> <!-- /.tab content -->
+
+                                    <div class="test-footer">
+                                    <div class="modal-footer">
+                                        <ul class="nav nav-tabs">
+                                            <li class="active tone"><a data-toggle="tab" href="#t1">1</a></li>
+                                            <li class="ttwo"><a data-toggle="tab" href="#t2">2</a></li>
+                                            <li class="tthree"><a data-toggle="tab" href="#t3">3</a></li>
+                                            <li class="tfour"><a data-toggle="tab" href="#t4">4</a></li>
+                                            <li class="tfive"><a data-toggle="tab" href="#t5">5</a></li>
+                                            <li class="tsix"><a data-toggle="tab" href="#t6">6</a></li>
+                                            <li class="tseven"><a data-toggle="tab" href="#t7">7</a></li>
+                                            <li class="teight"><a data-toggle="tab" href="#t8">8</a></li>
+                                            <li class="tnine"><a data-toggle="tab" href="#t9">9</a></li>
+                                            <li class="tten"><a data-toggle="tab" href="#t10">10</a></li>
+                                            <li class="televen"><a data-toggle="tab" href="#t11">11</a></li>
+                                            <li class="ttwelve"><a data-toggle="tab" href="#t12">12</a></li>
+                                        </ul>
+                                    </div> <!-- /.modal footer -->
+                                    </div>
+
+                                </div> <!-- /.modal content -->
+
+                            </div> <!-- /.modal dialog -->
+                        </div> <!-- /.container fluid -->
+                </div>
+        </div>
+        <!-- End test Section -->
+
+
+        <!-- Start exercise Section -->
+        <div class="section-modal modal fade" id="exercise-modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-content bg-img">
+                <div class="close-modal" data-dismiss="modal" onclick="hideContent()">
+                    <div class="lr">
+                        <div class="rl">
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="container-fluid">
+                    <div class="modal-dialog">
+
+                        <div class="tab-content question">
+                            <div class="modal-header">
+                                <h3>Zvoľ test</h3>
+                            </div>
+                            <div class="modal-body">
+
+                                <div class="col-md-3 col-sm-6 col-xs-6">
+                                    <div class="number">
+                                        <i class="glyphicon glyphicon-list-alt blue"></i>
+                                    </div>
+                                </div><!-- /.col-md-3 -->
+
+                                <div class="col-md-3 col-sm-6 col-xs-6">
+                                    <div class="number">
+                                        <i class="glyphicon glyphicon-list-alt green"></i>
+                                    </div>
+
+                                </div><!-- /.col-md-3 -->
+                                <div class="col-md-3 col-sm-6 col-xs-6">
+                                    <div class="number">
+                                        <i class="glyphicon glyphicon-list-alt light-red"></i>
+                                    </div>
+                                </div><!-- /.col-md-3 -->
+
+                                <div class="col-md-3 col-sm-6 col-xs-6">
+                                    <div class="number">
+                                        <i class="glyphicon glyphicon-list-alt light-orange"></i>
+                                    </div>
+                                </div><!-- /.col-md-3 -->
+
+                                <div class="col-md-3 col-sm-6 col-xs-6">
+                                    <div class="number">
+                                        <i class="glyphicon glyphicon-list-alt azure"></i>
+                                    </div>
+                                </div><!-- /.col-md-3 -->
+
+                                <div class="col-md-3 col-sm-6 col-xs-6">
+                                    <div class="number">
+                                        <i class="glyphicon glyphicon-list-alt dark-purple"></i>
+                                    </div>
+                                </div><!-- /.col-md-3 -->
+
+                                <div class="col-md-3 col-sm-6 col-xs-6">
+                                    <div class="number">
+                                        <i class="glyphicon glyphicon-list-alt dark-blue"></i>
+                                    </div>
+                                </div><!-- /.col-md-3 -->
+
+                                <div class="col-md-3 col-sm-6 col-xs-6">
+                                    <div class="number">
+                                        <i class="glyphicon glyphicon-list-alt dark-red"></i>
+                                    </div>
+                                </div><!-- /.col-md-3 -->
+
+                                <div class="text-center">
+                                    <i class="glyphicon glyphicon-print" onClick="window.print()"></i>
+                                </div>
+
+                            </div>
+                        </div> <!-- ./question -->
+
+                        <div class="modal-content exercise">
+                            <div class="tab-content ">
+                                <div id="q1" class="tab-pane fade in active">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">1</span> Dať prednosť v jazde sa rozumie</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r1" data-toggle="tab" href="#q2"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">povinnosť účastíka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel náhle zmeniť smer alebo rýchlosť jazdy</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">povinnosť účastníka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel zmeniť smer jazdy, môže však zmeniť rýchlosť jazdy</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">povinnosť účastníka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel zmeniť rýchlosť jazdy, môže však zmeniť smer jazdy</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q2" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">2</span> Motorové vozidlo musí mať počas jazdy rozsvietené</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r2" data-toggle="tab" href="#q3"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l2" data-toggle="tab" href="#q1"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio"> svetlá vo vnútri vozidla</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">diaľkové svetlomety</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block right2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">stretávacie svetlomety alebo im na roveň postavené osvetlenie</label></div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div id="q3" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">3</span>Vodič</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r3" data-toggle="tab" href="#q4"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l3" data-toggle="tab" href="#q2"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">môže počas vedenia vozidla telefonovať alebo inak používať telefónny prístroj</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">nesmie počas vedenie vozidla telefonovať alebo inak používať telefónny prístroj okrem telefonovania s použitím systému voľné ruky</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">nesmie počas vedenia vozidla počúvať rádio</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q4" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">4</span> Ak jazdné pruhy nie sú na vozovke vyznačené, jazdným pruhom sa rozumie časť vozovky dovoľujúca jazdu vozidiel</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r4" data-toggle="tab" href="#q5"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l4" data-toggle="tab" href="#q3"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">s troma a viacerými kolesami</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">najmenej s dvoma kolesami v jazdnom prúde za sebou</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">len s dvoma kolesami v jazdnom prúde za sebou</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q5" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">5</span> V motorovom vozidle sa smú na miestach na to vyhradených prepravovať osoby len do</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r5" data-toggle="tab" href="#q6"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l5" data-toggle="tab" href="#q4"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong5"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">80 % prípustnej užitočnej hmotnosti vozidla</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right5"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">prípustnej užitočnej hmotnosti vozidla, pritom počet prepravovaných osôb nesmie byť vyšší, ako je počet povolených miest uvedených v osvedčení o evidencii</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong5"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">pohotovostnej hmotnosti vozidla</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q6" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">6</span> Táto dopravná značka znamená</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img01.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r6" data-toggle="tab" href="#q7"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l6" data-toggle="tab" href="#q5"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong6"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">najnižšia dovolená rýchlosť</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right6"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">najvyššia dovolená rýchlosť</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong6"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">odporúčaná rýchlosť</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q7" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">7</span>Táto dopravná značka znamená</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img02.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r7" data-toggle="tab" href="#q8"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l7" data-toggle="tab" href="#q6"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong7"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">návesť pred križovatkou</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right7"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">návesť pred slepou cestou</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong7"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zákaz odbočovania vpravo</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q8" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">8</span>Táto dopravná značka znamená</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img03.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r8" data-toggle="tab" href="#q9"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l8" data-toggle="tab" href="#q7"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong8"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">vyznačuje úsek, kde je zakázané zastavenie</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong8"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">oddeľuje okraj vozovky od cestičky pre cyklistov</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block right8"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">vyznačuje úsek, kde je zakázané státie</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q9" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">9</span>Táto dopravná značka znamená</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img04.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r9" data-toggle="tab" href="#q10"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l9" data-toggle="tab" href="#q8"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong9"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zákaz státia na krajnici</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right9"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">odletujúci štrk</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong9"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">nebezpečenstvo poškodenia pneumatík</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q10" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">10</span> Zelené vozidlo vojde do križovatky ako</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img03.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r10" data-toggle="tab" href="#q11"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l10" data-toggle="tab" href="#q9"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right10"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">druhé</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong10"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">tretie</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong10"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">prvé</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q11" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">11</span> Ako posledné prejde cez križovatku</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img01.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="r11" data-toggle="tab" href="#q12"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                        <a id="l11" data-toggle="tab" href="#q10"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right11"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">červené vozidlo</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong11"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zelené vozidlo</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong11"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">modré vozidlo</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="q12" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">12</span> Vozidlá prejdú cez križovatku v tomto poradí</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img02.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <a id="l12" data-toggle="tab" href="#q11"><i class="glyphicon glyphicon-menu-left"></i></a>
+                                        <div class="quiz" data-toggle="buttons">
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong12"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">1. zelené, 2. modré, 3. vaše vozidlo</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong12"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">1. modré, 2. zelené, 3. vaše vozidlo</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block right12"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">1. modré, 2. vaše vozidlo, 3. zelené</label></div>
+                                        </div>
+                                        <hr class="exercise-vyhodnotit">
+                                        <a data-toggle="tab" href="#finish"><div class="btn btn-lg btn-info btn-block btn exercise-vyhodnotit">Vyhodnotiť</div></a>
+                                    </div>
+                                </div>
+
+                                <div id="finish" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3>Výsledky</h3>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <h4 id="results"></h4>
+                                    </div>
+                                </div>
+
+                            </div> <!-- /.tab content -->
+
+                            <div class="exercise-footer">
+                            <div class="modal-footer">
+                                <ul class="nav nav-tabs">
+                                    <li class="active one"><a data-toggle="tab" href="#q1">1</a></li>
+                                    <li class="two"><a data-toggle="tab" href="#q2">2</a></li>
+                                    <li class="three"><a data-toggle="tab" href="#q3">3</a></li>
+                                    <li class="four"><a data-toggle="tab" href="#q4">4</a></li>
+                                    <li class="five"><a data-toggle="tab" href="#q5">5</a></li>
+                                    <li class="six"><a data-toggle="tab" href="#q6">6</a></li>
+                                    <li class="seven"><a data-toggle="tab" href="#q7">7</a></li>
+                                    <li class="eight"><a data-toggle="tab" href="#q8">8</a></li>
+                                    <li class="nine"><a data-toggle="tab" href="#q9">9</a></li>
+                                    <li class="ten"><a data-toggle="tab" href="#q10">10</a></li>
+                                    <li class="eleven"><a data-toggle="tab" href="#q11">11</a></li>
+                                    <li class="twelve"><a data-toggle="tab" href="#q12">12</a></li>
+                                </ul>
+                            </div> <!-- /.modal footer -->
+                            </div>
+
+                        </div> <!-- /.modal content -->
+
+                    </div> <!-- /.modal dialog -->
+                </div> <!-- /.container fluid -->
+            </div>
+        </div>
+        <!-- End exercise Section -->
+
+
+        <!-- Start knowledge Section -->
+        <div class="section-modal modal fade" id="knowledge-modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-content bg-img">
+                <div class="close-modal" data-dismiss="modal">
+                    <div class="lr">
+                        <div class="rl">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container text-center">
+                    <h4>Nenaimplementované</h4>
+                    <h4>Test sa upravuje podľa štatistík a úspešnosti užívateľa.</h4>
+                </div>
+
+
+            </div>
+        </div>
+        <!-- End knowledge Section -->
+
+
+        <!-- Start sign Section -->
+        <div class="section-modal modal fade" id="sign-modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-content bg-img">
+                <div class="close-modal" data-dismiss="modal" onclick="hideContent()">
+                    <div class="lr">
+                        <div class="rl">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container-fluid">
+                    <div class="modal-dialog">
+
+                        <div class="modal-content signs">
+                            <div class="tab-content ">
+                                <div id="s1" class="tab-pane fade in active">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">1</span>Táto dopravná značka znamená</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img04.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="quiz" data-toggle="buttons">
+                                            <a id="sr1" data-toggle="tab" href="#s2"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zákaz státia na krajnici</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">odletujúci štrk</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">nebezpečenstvo poškodenia pneumatík</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="s2" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">2</span>Táto dopravná značka znamená</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img03.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="quiz" data-toggle="buttons">
+                                            <a id="sr2" data-toggle="tab" href="#s3"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">vyznačuje úsek, kde je zakázané zastavenie</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">oddeľuje okraj vozovky od cestičky pre cyklistov</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block right2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">vyznačuje úsek, kde je zakázané státie</label></div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div id="s3" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">3</span>Táto dopravná značka znamená</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img02.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="quiz" data-toggle="buttons">
+                                            <a id="sr3" data-toggle="tab" href="#s4"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">návesť pred križovatkou</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">návesť pred slepou cestou</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zákaz odbočovania vpravo</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="s4" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">4</span>Táto dopravná značka znamená</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/signs/img04.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="quiz" data-toggle="buttons">
+                                            <a id="sr4" data-toggle="tab" href="#s5"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zákaz státia na krajnici</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block right4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">odletujúci štrk</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">nebezpečenstvo poškodenia pneumatík</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer text-center">
+                                    <h4 id="sresults">Úspešnosť: - %</h4>
+                                </div> <!-- /.modal footer -->
+
+                            </div> <!-- /.tab content -->
+
+                        </div> <!-- /.modal content -->
+
+                    </div> <!-- /.modal dialog -->
+                </div> <!-- /.container fluid -->
+
+            </div>
+        </div>
+        <!-- End sign Section -->
+
+
+        <!-- Start crossroad Section -->
+        <div class="section-modal modal fade" id="crossroad-modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-content bg-img">
+                <div class="close-modal" data-dismiss="modal" onclick="hideContent()">
+                    <div class="lr">
+                        <div class="rl">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container-fluid">
+                    <div class="modal-dialog">
+
+                        <div class="modal-content crossroads">
+                            <div class="tab-content">
+                                <div id="c1" class="tab-pane fade in active">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">1</span> Zelené vozidlo vojde do križovatky ako</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img03.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="quiz" data-toggle="buttons">
+                                            <a id="cr1" data-toggle="tab" href="#c2"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">druhé</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">tretie</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong1"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">prvé</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="c2" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">2</span> Ako posledné prejde cez križovatku</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img01.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="quiz" data-toggle="buttons">
+                                            <a id="cr2" data-toggle="tab" href="#c3"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">červené vozidlo</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">zelené vozidlo</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong2"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">modré vozidlo</label></div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div id="c3" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">3</span> Vozidlá prejdú cez križovatku v tomto poradí</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img02.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="quiz" data-toggle="buttons">
+                                            <a id="cr3" data-toggle="tab" href="#c4"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block wrong3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">1. zelené, 2. modré, 3. vaše vozidlo</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">1. modré, 2. zelené, 3. vaše vozidlo</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block right3"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">1. modré, 2. vaše vozidlo, 3. zelené</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="c4" class="tab-pane fade">
+                                    <div class="modal-header">
+                                        <h3><span class="label label-primary qid">4</span> Zelené vozidlo vojde do križovatky ako</h3>
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/crossroads/img03.jpg" class="img-responsive" alt="">
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="quiz" data-toggle="buttons">
+                                            <a id="cr4" data-toggle="tab" href="#c5"><i class="glyphicon glyphicon-menu-right"></i></a>
+                                            <div class="grow"><label class="element-animation1 btn btn-lg btn-primary btn-block right4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">druhé</label></div>
+                                            <div class="grow"><label class="element-animation2 btn btn-lg btn-primary btn-block wrong4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">tretie</label></div>
+                                            <div class="grow"><label class="element-animation3 btn btn-lg btn-primary btn-block wrong4"><span class="btn-label"><i class="glyphicon glyphicon-chevron-right"></i></span> <input type="radio">prvé</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer text-center">
+                                    <h4 id="cresults">Úspešnosť: - %</h4>
+                                </div> <!-- /.modal footer -->
+
+                            </div> <!-- /.tab content -->
+
+                        </div> <!-- /.modal content -->
+
+                    </div> <!-- /.modal dialog -->
+                </div> <!-- /.container fluid -->
+
+            </div>
+        </div>
+        <!-- End crossroad Section -->
+
+
+        <!-- Start material Section -->
+        <div class="section-modal modal fade" id="material-modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-content">
+                <div class="close-modal" data-dismiss="modal">
+                    <div class="lr">
+                        <div class="rl">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="wrapper" class="toggled">
+
+                    <!-- Sidebar -->
+                    <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation">
+                        <ul class="nav sidebar-nav">
+                            <li class="sidebar-brand">
+                                <a>Učebné texty</a>
+                            </li>
+                            <li>
+                                <a id="u1" class="blue">Povinnosti vodiča</a>
+                            </li>
+                            <li>
+                                <a id="u2">Povinnosť držiteľa vozidla</a>
+                            </li>
+                            <li>
+                                <a>Spôsob jazdy</a>
+                            </li>
+                            <li>
+                                <a>Jazda v jazdných pruhoch</a>
+                            </li>
+                            <li>
+                                <a>Obchádzanie</a>
+                            </li>
+                            <li>
+                                <a>Predchádzanie</a>
+                            </li>
+                            <li>
+                                <a>Rýchlosť jazdy</a>
+                            </li>
+                            <li>
+                                <a>Vyhýbanie</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <!-- /#sidebar-wrapper -->
+
+                    <!-- Page Content -->
+                    <div id="page-content-wrapper">
+                        <button type="button" class="hamburger is-open" data-toggle="offcanvas">
+                            <span class="hamb-top"></span>
+                            <span class="hamb-middle"></span>
+                            <span class="hamb-bottom"></span>
+                        </button>
+                        <div class="container">
+                            <div class="row" id="ucebne1">
+                                <div class="col-md-8 col-md-offset-2">
+                                    <h1><span class="label blue qid1">1</span>Povinnosti vodiča</h1>
+                                    <br>
+                                    <p>(1) Vodič je povinný</p>
+                                    <p>a) použiť na jazdu len vozidlo, ktoré možno prevádzkovať v cestnej premávke,</p>
+                                    <p>b) mať pri sebe platné doklady predpísané týmto zákonom alebo osobitným predpisom,</p>
+                                    <p>c) venovať sa plne vedeniu vozidla a sledovať situáciu v cestnej premávke,</p>
+                                    <p>d) brať  ohľad  na  vozidlo  označené  osobitným  označením a  na  označené  výcvikové  vozidlo autoškoly,</p>
+                                    <p>e) dbať  na  zvýšenú  opatrnosť  voči  cyklistom  a  chodcom, najmä  deťom,  osobám  so zdravotným  postihnutím,  osobitne  voči  osobám,  ktoré používajú  bielu  palicu, a starým osobám,</p>
+                                    <p>f) dať prednosť chodcovi, ktorý vstúpil na vozovku a prechádza cez priechod pre chodcov, pritom ho nesmie ohroziť; to neplatí pre vodiča električky,</p>
+                                    <p>g) pribrať potrebný počet spôsobilých osôb, ak to vyžaduje bezpečnosť cestnej premávky, a na ten účel ich náležite poučiť,</p>
+                                    <p>h) zabezpečiť  vozidlo  a  prepravované  veci  proti  odcudzeniu  prostriedkami  montovanými  do vozidla jeho výrobcom, ak sa vzdiali od vozidla mimo jeho dohľadu,</p>
+                                    <p>i) zabezpečiť  pred  jazdou  a  počas  jazdy,  aby  sa  vo  výhľadovom  poli  vodiča  nenachádzali predmety, ktoré môžu odvádzať pozornosť od bezpečného vedenia vozidla.</p>
+
+                                </div>
+                            </div>
+
+                            <div class="row" id="ucebne2">
+                                <div class="col-md-8 col-md-offset-2">
+                                    <h1><span class="label green qid1">2</span>Povinnosť držiteľa vozidla</h1>
+                                    <br>
+                                    <p>Držiteľ vozidla je povinný zabezpečiť, aby pri prevádzkovaní motorového vozidla boli dodržiavané pravidlá cestnej premávky podľa tohto zákona, ktoré ustanovujú </p>
+                                    <p>a) zákaz predchádzania podľa § 15 ods. 5, § 35 ods. 3 alebo zákaz predchádzania vyplývajúci z dopravnej značky alebo dopravného zariadenia, </p>
+                                    <p>b) rýchlosť jazdy podľa § 16 alebo § 27 ods. 3, </p>
+                                    <p>c) povinnosť zastaviť vozidlo na príkaz dopravnej značky "Stoj, daj prednosť v jazde!" alebo na signál so znamením "Stoj!", </p>
+                                    <p>zákaz otáčania a cúvania podľa § 22 ods. 4 alebo zákaz otáčania vyplývajúci z dopravnej značky alebo dopravného zariadenia, </p>
+                                    <p>e) zákaz  zastavenia  a  státia  podľa  §  25  alebo  zákaz  zastavenia  alebo  státia  vyplývajúci  z dopravnej značky alebo dopravného zariadenia, </p>
+                                    <p>f)prejazd cez železničné priecestie v čase, keď je to zakázané podľa § 27 až 29, </p>
+                                    <p>g) najväčšiu  prípustnú  celkovú  hmotnosť  vozidla,  najväčšiu  prípustnú  hmotnosť  jazdnej súpravy,  najväčšiu  prípustnú  celkovú  hmotnosť  prípojného  vozidla  alebo  najväčšiu prípustnú hmotnosť pripadajúcu na nápravu vozidla podľa § 51, </p>
+                                    <p>h) zákaz  vjazdu,  zákaz  odbočovania  alebo  prikázaný  smer  jazdy  vyplývajúci  z  dopravnej značky alebo dopravného zariadenia. </p>
+                                    <p>i) zákaz  vjazdu  vozidla  vyplývajúci  z dopravnej  značky alebo  dopravného  zariadenia  alebo zákaz  jazdy  vozidla  s  najväčšou  prípustnou  celkovou hmotnosťou  vozidla  prevyšujúcou 12 000  kg  alebo  jazdnej  súpravy  s  najväčšou  prípustnou  celkovou  hmotnosťou prevyšujúcou 12 000 kg podľa § 39 ods. 4. </p>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /#page-content-wrapper -->
+
+                </div>
+                <!-- /#wrapper -->
+
+            </div>
+        </div>
+        <!-- End material Section -->
+
+
+        <!-- Start login Section -->
+        <div class="section-modal modal fade" id="login-modal" tabindex="-1" role="dialog" aria-hidden="true">
+
+                <div class="close-modal" id="white_cross" data-dismiss="modal" onclick="slider_fade_in();">
+                    <div class="lr">
+                        <div class="rl">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container login_page_container">
+                    <div class="login_menu " id="login_menu_id">
+                        <div class="sprava" id="login_sprava_norm"></div>
+
+                        <!-- odhlasovanie -->
+                        <div class="login_msg col-md-6 col-md-push-3 script_pom" id="login_msg_id" >
+                            <div class="row script_pom" id="acc_info">
+                                <div class="sprava script_pom" id="acc_header"></div>
+                            </div>
+                            <div class="row script_pom" id="sprava_konta_id">
+                                <div class="row script_pom">
+                                    <h2 class="sprava script_pom">Správa konta:</h2>
+                                </div>
+                                <div class = "login_content animate row btn-block script_pom">
+                                    <button class = "col-md-5 menu-item btn btn-lg btn-primary script_pom " id="btn_logout" type = "button"
+                                            name = "login" onclick="logout();">
+                                        <span class="glyphicon glyphicon-off script_pom">
+
+                                        </span>
+                                        Odhlásiť sa</button>
+                                    <button class = "col-md-5 col-md-push-2 menu-item btn btn-lg btn-primary script_pom" id="btn_odstr" type = "button"
+                                            name = "login" onclick="deleteAcc();">
+                                        <span class="glyphicon glyphicon-remove script_pom">
+
+                                        </span>
+                                        Odstráň účet</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- odhlasovanie koniec -->
+
+                        <!-- hlavne prihlasovanie -->
+                        <div class = "login_content modal-dialog animate" id="login_id">
+                            <div class="buttons">
+                                <div id="soc_med">
+                                    <button type="button" class="btn btn-primary btn-sm red"
+                                            onclick="document.getElementById('fb_id').style.display='block'
+                                                     document.getElementById('login_id').style.display='none'">Facebook</button>
+                                    <button type="button" class="btn btn-primary btn-sm red">Google</button>
+                                    <button type="button" class="btn btn-primary btn-sm red">Twitter</button>
+                                </div>
+                                <div id="reg_btn">
+                                    <button id="reg_btn_id" type="button" class="btn btn-primary btn-sm red"
+                                            onclick="document.getElementById('reg_id').style.display='block'
+                                                    document.getElementById('login_id').style.display='none'
+                                                    document.getElementById('reg_login_id').classList.add('animate');">Register</button>
+                                </div>
+                            </div>
+
+                            <form name="login_form" class = "form_login" role = "form" method = "post">
+                                <input type ="text" class = "form-control"
+                                       placeholder="Meno" name="meno"
+                                       autocomplete="off" required autofocus><br>
+                                <input type ="password" class = "form-control"
+                                       placeholder="Heslo" name="heslo"
+                                       autocomplete="off" required autofocus>
+                                <button class = "btn btn-lg btn-primary btn-block script_pom_2" id="login_btn" type = "button"
+                                        name = "login" onclick="validateForm();">Login</button>
+                            </form>
+                        </div>
+                        <!-- hlavne prihlasovanie koniec-->
+
+                        <!-- prihlasovanie pomocou fb -->
+                        <div id="fb_id" class="modal_popout">
+                            <form name="login_fb_form" class="animate modal-content_fb" id="fb_login_id" role = "form" method = "post"> <!-- action="action_page.php" -->
+                                <h2>Prihlásenie cez Facebook</h2>
+                                <div class="imgcontainer">
+                                    <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/login/fb_profile.jpg" alt="Avatar" class="avatar">
+                                </div>
+
+                                <div class="sprava" id="login_sprava_fb"></div>
+
+                                <div class="container">
+                                    <input type ="text" class = "form-control" placeholder="Meno" name="meno" autocomplete="off" required autofocus><br>
+                                    <input type ="password" class = "form-control" placeholder="Heslo" name="heslo" autocomplete="off" required>
+                                    <button class = "btn btn-lg btn-primary btn-block" id="btn_fb" type = "button"
+                                            name = "login" onclick="validateForm();">Login</button>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- prihlasovanie pomocou fb koniec-->
+
+                    </div>
+
+                    <!-- registracia -->
+                    <div class="reg_menu ">
+                            <div id="reg_id" class="modal_popout ">
+                                <div class="modal-content_reg animate script_pom_3" id="reg_login_id">
+                                    <h2>Registrácia</h2>
+                                    <div class="imgcontainer script_pom_3">
+                                        <img src="http://www.stud.fit.vutbr.cz/~xurban66/images/login/reg.png" alt="Avatar" class="avatar">
+                                    </div>
+                                    <div class="sprava script_pom_3" id="login_sprava_reg"></div>
+                                    <form name="registracia" class="animate script_pom_3" method="post">
+                                        <div class="top-row script_pom_3">
+                                            <input type ="text" placeholder="Meno *" name="meno"
+                                                   class="left_half script_pom_3" autocomplete="off" required autofocus/>
+                                            <input type ="text" placeholder="Priezvisko *" name="priez"
+                                                   class="right_half script_pom_3" autocomplete="off" required autofocus/>
+                                        </div>
+                                        <input class="script_pom_3" type ="email" placeholder="email" name="email"
+                                               autocomplete="off" />
+                                        <input class="script_pom_3" type ="password" placeholder="Heslo *" name="heslo"
+                                               autocomplete="off" required/>
+                                        <input class="script_pom_3" type ="password" placeholder="Zopakuj heslo *" name="heslo_rep"
+                                               autocomplete="off" required/>
+                                        <button type="button" class="btn btn-lg btn-primary left_half script_pom_3"
+                                                onclick="registration();" >Sign In</button>
+                                        <button type="button" id="exit_btn_id" class="btn btn-lg btn-primary right_half script_pom_3"
+                                                onclick="document.getElementById('reg_id').style.display='none';
+                                                         document.getElementById('login_id').style.display='block'">exit</button>
+                                    </form>
+                                </div>
+                            <!-- registracia koniec -->
+                            <script>close();</script>
+                        </div>
+                    </div>
+
+                </div>
+        </div>
+        <!-- End login Section -->
+
+
+         <!-- Start stats Section -->
+        <div class="section-modal modal fade" id="stats-modal" tabindex="-1" role="dialog" aria-hidden="true">
+
+            <div class="modal-content">
+                <div class="close-modal" data-dismiss="modal">
+                    <div class="lr">
+                        <div class="rl">
+                        </div>
+                    </div>
+                </div>
+
+
+                <div  class="stats_container">
+                    <div class="row row_1">
+                        <div class="col-lg-8 col-lg-push-2 col-sm-6 col-sm-push-2" id="stats_nadpis">
+                            <h1 style="text-align: center">Vyhodnotenie vaších výsledkov</h1>
+                            <p style="text-align: center; font-size: 15px; font-family: 'Titillium Web', sans-serif;">
+                                Tu si môžete pozrieť, a porovnať vaše doterajšie výsledky z testov.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="row row_2">
+
+                        <div class="col-lg-6 col-lg-push-3 col-sm-6 col-sm-push-3 block" id="stats_progress">
+                            <div class="myitem">
+                                <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="999999">
+                                    <!-- Indicators -->
+                                    <ol class="carousel-indicators">
+                                        <li id="graf_1" data-target="#myCarousel" data-slide-to="0" class="active"></li>
+                                        <li id="graf_2" data-target="#myCarousel" data-slide-to="1"></li>
+                                        <li id="graf_3" data-target="#myCarousel" data-slide-to="2"></li>
+                                    </ol>
+
+                                    <div class="carousel-inner" role="listbox">
+                                        <div class="item active">
+                                            <div id="progress_graf" class="graf">
+                                                <div class="skill-shortcode ">
+                                                    <!-- Progress Bar -->
+                                                    <div class="skill">
+                                                        <p>Skúšobný test</p>
+                                                        <div class="progress">
+                                                            <div class="progress-bar " id="bar1" role="progressbar"  data-percentage="60">
+                                                                <span class="progress-bar-span" >60%</span>
+                                                                <span class="sr-only">60% Complete</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+
+                                                    <!-- Progress Bar -->
+                                                    <div class="skill">
+                                                        <p>Test so značkami</p>
+                                                        <div class="progress">
+                                                            <div class="progress-bar " id="bar2" role="progressbar"  data-percentage="95">
+                                                                <span class="progress-bar-span" >95%</span>
+                                                                <span class="sr-only">95% Complete</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Progress Bar -->
+                                                    <div class="skill">
+                                                        <p>Test s križovatkami</p>
+                                                        <div class="progress">
+                                                            <div class="progress-bar " id="bar3" role="progressbar"  data-percentage="80">
+                                                                <span class="progress-bar-span" >80%</span>
+                                                                <span class="sr-only">80% Complete</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Progress Bar -->
+                                                    <div class="skill">
+                                                        <p>Test podľa znalostí</p>
+                                                        <div class="progress">
+                                                            <div class="progress-bar " id="bar4" role="progressbar"  data-percentage="100">
+                                                                <span class="progress-bar-span" >100%</span>
+                                                                <span class="sr-only">100% Complete</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="item">
+                                            <div class="graf">
+                                                <div class="row">
+                                                    <canvas id="myChart" height="341" width="683"></canvas>
+                                                    <script>
+                                                        var ctx = document.getElementById("myChart").getContext('2d');
+                                                        var myChart = new Chart(ctx, {
+                                                            type: 'pie',
+                                                            data: {
+                                                                labels: ["Križovatky", "Značky", "Teória"],
+                                                                datasets: [{
+                                                                    backgroundColor: [
+                                                                        "#3498db",
+                                                                        "#f1c40f",
+                                                                        "#e74c3c"
+                                                                    ],
+                                                                    data: [42, 31, 27 ]
+                                                                }]
+                                                            }
+                                                        });
+                                                    </script>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="item">
+                                            <div class="graf">
+                                                <div class="row animate">
+                                                    <canvas id="myChart1" style="height: 341px"></canvas>
+                                                    <script>
+                                                        var ctx = document.getElementById("myChart1").getContext('2d');
+                                                        var myChart1 = new Chart(ctx, {
+                                                            type: 'line',
+                                                            data: {
+                                                                labels: ["1.týždeň", "2.týždeň", "3.týždeň", "4.týždeň", "5.týždeň", "6.týždeň", "7.týždeň", "8.týždeň"],
+                                                                datasets: [{
+                                                                    label: 'percentá',
+                                                                    data: [70, 40, 15, 25, 17, 9, 3, 5],
+                                                                    backgroundColor: "rgba(59, 106, 154, 0.59)"
+                                                                },
+                                                                    {
+                                                                        label: 'počet zodpovedaných otázok',
+                                                                        data: [48, 24, 24, 60, 30, 12, 12, 24],
+                                                                        backgroundColor: "rgba(255,153,0,0.4)"
+                                                                    }]
+                                                            }
+                                                        });
+                                                    </script>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a class="carousel-control left_btn " href="#myCarousel" role="button" data-slide="prev"
+                                onclick="koment_prew()">
+                                    <span class="sipka glyphicon glyphicon-chevron-left" ></span>
+                                    <span class="sr-only">Previous</span>
+                                </a>
+                                <a class="carousel-control  right_btn " href="#myCarousel" role="button" data-slide="next"
+                                   onclick="koment_next()">
+                                    <span class="sipka glyphicon glyphicon-chevron-right" ></span>
+                                    <span class="sr-only">Next</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row_3">
+                        <div class="col-lg-6 col-lg-push-3">
+                            <div id="koment_1" class="center">
+                                <h2>Graf úrovne vyplnenia všetkých testov</h2>
+                                <p>Tento graf znázorňuje, koľko percent z jednotlivých testov ste už prešli.</p>
+                            </div>
+                            <div id="koment_2" class="center">
+                                <h2>Percentuálne porovnanie chýb v kategóriach</h2>
+                                <p>Tento graf znázorňuje percentuálne porovnanie poču chýb medzi karegóriami testov.</p>
+                            </div>
+                            <div id="koment_3" class="center">
+                                <h2>Chybovosť zo vsetkých testov</h2>
+                                <p>Tento graf znázorňuje závislosť počtu chýb od počtu zodpovedaných otázok.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- End stats Section -->
+
+        <!-- Start stats_logout Section -->
+        <div class="section-modal modal fade" id="stats-modal_logout" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-content">
+                <div class="close-modal" data-dismiss="modal">
+                    <div class="lr">
+                        <div class="rl">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container">
+                    <div class="row">
+                        <span class="glyphicon glyphicon-lock"></span>
+                    </div>
+                    <div class="row">
+                        <h2>Pre zobrazenie štatistík je nutné sa prihlásiť.</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End stats_logout Section -->
+
+
+        <div id="print">
+            <div class="row">
+                    <h3>1. Dať prednosť v jazde sa rozumie</h3>
+                        <p>a.) povinnosť účastíka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel náhle zmeniť smer alebo rýchlosť jazdy</p>
+                        <p>b.) povinnosť účastníka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel zmeniť smer jazdy, môže však zmeniť rýchlosť jazdy</p>
+                        <p>c.) povinnosť účastníka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel zmeniť rýchlosť jazdy, môže však zmeniť smer jazdy</p>
+            </div>
+
+
+            <div class="row">
+                    <h3>2. Motorové vozidlo musí mať počas jazdy rozsvietené</h3>
+                        <p>a.) svetlá vo vnútri vozidla</p>
+                        <p>b.) diaľkové svetlomety</p>
+                        <p>c.) stretávacie svetlomety alebo im na roveň postavené osvetlenie</p>
+            </div>
+
+            <div class="row">
+                    <h3>3. Dať prednosť v jazde sa rozumie</h3>
+                        <p>a.) povinnosť účastíka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel náhle zmeniť smer alebo rýchlosť jazdy</p>
+                        <p>b.) povinnosť účastníka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel zmeniť smer jazdy, môže však zmeniť rýchlosť jazdy</p>
+                        <p>c.) povinnosť účastníka cestnej premávky počínať si tak, aby ten, kto má prednosť v jazde nemusel zmeniť rýchlosť jazdy, môže však zmeniť smer jazdy</p>
+            </div>
+        </div>
+
+    </body>
+
+
+
+</html>
