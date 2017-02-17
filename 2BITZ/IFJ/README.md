@@ -13,7 +13,7 @@ The implementation has been split up into several modules:
 
 ## How it did at tests
 
-Our project has fulfilled **97 percents** upon submit and received **20+4** points. For a complex analysis see __hodnoceni__ file. 
+Our project has fulfilled **97 percents** upon submit and received **20+1+4** points. For a complex analysis see __hodnoceni__ file. 
 
 ## How to compile
 
