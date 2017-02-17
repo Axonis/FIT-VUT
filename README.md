@@ -22,6 +22,8 @@
          
 ## 3.semester - 2BITZ
 
+    IAL - 1. - 10/10
+          2. - 10/10
     IFJ - 21/20 + 4/5 dokumentácia (nahrala sa stará verzia dokumentácie)
     INP - 1. - 10/10
           2. - 23/23
