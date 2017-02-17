@@ -1,0 +1,108 @@
+#!/bin/sh
+
+#######################################################
+#   Checks if parameter is given, if so, checks if 
+#   directory exists
+FILE_ERE=
+case "$1" in
+    "-i") 
+        FILE_ERE="$2"   
+        if [ -z $2 ]; then #if file_ere is empty terminates script
+            echo "Regular expression not found!"
+            echo "Terminating script!"
+            exit 1
+        fi
+        DIR=$3
+        if [ ! -d ${DIR=`readlink -f $1`} ]; then #checks if given argument is directory, otherwise terminates script
+            echo "Directory does not exists!"
+            echo "Terminating script!"
+            exit 1
+        fi
+        
+        if [ -z $DIR ]; then #if DIR is empty, it is set to pwd
+            DIR=$PWD
+        fi
+        ;;
+    "")
+        FILE_ERE="\0bt"
+        DIR=$PWD
+        ;;
+    *)
+        DIR=$1
+        if [ ! -d ${DIR=`readlink -f $1`} ]; then #checks if given argument is directory, if so, DIR is set to 1st arguemnt, otherwise terminates script
+            echo "Directory does not exists!"
+            echo "Terminating script!"
+            exit 1
+        fi
+        FILE_ERE="\0bt"
+        ;;
+esac
+
+
+#######################################################
+#   Checks if there are private directorues, if so, 
+#   terminates script
+if [ "`find $DIR -name expect 2>&1`" != "" ]; then  #if restricted dir is accessed error pops up and is redirected to stdout
+    echo "Failed to enter directory!"
+    echo "Terminating script!"
+    exit 1
+fi 
+
+#######################################################
+#   VALUE EVALUATION
+NUM_OF_DIRS=`find $DIR -type d | egrep -v $FILE_ERE |  wc -l` #counts number of sub/directories in given DIR
+if [ $NUM_OF_DIRS -eq 0 ]; then # if regex excludes every directory found script is terminated
+    echo "Failed to find any directory!"
+    echo "Terminating script!"
+    exit 1
+fi
+NUM_OF_FILES=`find $DIR -type f | egrep -v $FILE_ERE | wc -l` #counts number of files in given DIR and his subdirectories
+DEPTH=`find $DIR -type d -printf '%d\n' | egrep -v $FILE_ERE | sort -n | tail -1` #finds depth of every directory possible,last sorted output is max depth
+MAX_DEPTH=$(( DEPTH + 1 )) #if given directory has depth of 1, then every other subdirectory has to be higher
+AVG_NO_FILES=$(( NUM_OF_FILES / NUM_OF_DIRS)) #files/dirs, truncate
+while [ $NUM_OF_FILES -ne 0 ]; do #if number of files is not 0 then counts every value needed for output
+SUMMED_UP_SIZE=`find $DIR -type f -ls | awk '{print $7,$11}' | egrep -v $FILE_ERE | cut -f1 -d" " | awk '{sum+=$1} END {print sum}'` #sums up every file size found
+AVG_FILE_SIZE=$(( SUMMED_UP_SIZE / NUM_OF_FILES )) #total size/ number of all files, truncate
+FILE_SIZE_LIST=`find $DIR -type f -ls | awk '{print $7,$11}'| egrep -v $FILE_ERE | cut -f1 -d" " | sort -g` # stores sizes in a string
+MAX_FILE_SIZE=`echo "$FILE_SIZE_LIST" | tail -1` # sets first size as maximum,if higher value is found it is set as maximum
+MEDIAN=0
+MEDIAN_EXT=0
+
+#######################################################
+#   EXTENSION PARSER
+EXTENSIONS=`find $DIR -type f | sed 's/.*\///' | tr -d ' ' | egrep -v $FILE_ERE | grep -F '.'|  grep -v -F '~' | sed 's/.*\.//' | sort -Vu` # files | trim their path | deletes space from name | excludes files without '.' | extracts extension | sorts them by localization and keep only unique ones
+MEDIAN=`echo "$FILE_SIZE_LIST" | awk '{array[NR] = $1 } END {if (NR % 2) {print int(array[(NR + 1) / 2])} else {print int((array[(NR / 2)] + array[(NR / 2) + 1]) / 2)}}'` # sends string with sizes | if there is even NR, median is middle element, otherwise 2 middle elements are divided and rounded
+break #break while, so it wont cycle forever
+done
+if [ $NUM_OF_FILES -eq 0 ]; then #if number of files is 0, subsequent values are set to N/A
+MAX_FILE_SIZE=N/A
+AVG_FILE_SIZE=N/A
+MEDIAN=N/A
+fi
+#######################################################
+#   OUTPUT
+echo "Root directory: $DIR"                    
+echo "Directories: $NUM_OF_DIRS"               
+echo "Max depth: $MAX_DEPTH"                   
+echo "Average no. of files: $AVG_NO_FILES"      
+echo "All files: $NUM_OF_FILES"                
+echo "  Largest file: $MAX_FILE_SIZE"           
+echo "  Average file size: $AVG_FILE_SIZE"      
+echo "  File size median: $MEDIAN"    
+
+if [ "$EXTENSIONS" != "" ] ; then # checks if there are any extensions
+        echo File extensions:  `echo $EXTENSIONS | tr ' ' ','` # prints them out in a list
+        for ext in $EXTENSIONS ; do # for every extensions evaluates needed values for report, same as for every file, with addition of grep for each extension give
+                FILE_SIZE_LIST_EXT=`find $DIR -type f -ls | awk '{print $7,$11}' | egrep -v $FILE_ERE | grep "$ext$" | cut -f1 -d" "  | awk '{print $1}' | sort -g`
+                MEDIAN_EXT=`echo "$FILE_SIZE_LIST_EXT" | awk '{array[NR] = $1 } END {if (NR % 2) {print int(array[(NR + 1) / 2])} else {print int((array[(NR / 2)] + array[(NR / 2) + 1]) / 2)}}'`
+                echo "Files .$ext: `find $DIR -type f | egrep -v $FILE_ERE | grep "$ext$" | wc -l`"
+                echo "  Largest file .$ext: `echo "$FILE_SIZE_LIST_EXT" | tail -1`" 
+                SUMMED_UP_SIZE_EXT=`find $DIR -type f -ls | awk '{print $7,$11}' | egrep -v $FILE_ERE | grep "$ext$" | cut -f1 -d" " | awk '{sum+=$1} END {print sum}'`
+                NUM_OF_FILES_EXT=`find $DIR -type f | egrep -v $FILE_ERE | grep "$ext$" | wc -l`
+                echo "  Average file size .$ext: $(( SUMMED_UP_SIZE_EXT / NUM_OF_FILES_EXT ))" 
+                echo "  File size median .$ext: $MEDIAN_EXT" 
+        done
+else
+	echo "File extensions:" # if there are no extensions prints empty list
+fi
+exit 0
