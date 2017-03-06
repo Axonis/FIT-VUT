@@ -2,39 +2,38 @@
 <?php
 
 $arguments = parser($argv, $argc);
-$input = file_handler($arguments["input"],"r");
+$input = file_handler($arguments["input"], "r");
 $json = json_validator($input);
-$output = file_handler($arguments["output"],"w");
+$output = file_handler($arguments["output"], "w");
 write($json, $arguments);
 
 function file_handler($file, $type)
 {
     //This function may return Boolean FALSE, but may also return a non-Boolean value which evaluates to FALSE.
     // Please read the section on Booleans for more information. Use the === operator for testing the return value of this function.
-    if($type == "r") {
+    if ($type == "r") {
         if (($handle = file_get_contents($file)) === false) {
             throw new errException("Failed to read input file.", 2);
         }
         return $handle;
     }
 
-    if($type == "w") {
+    if ($type == "w") {
         if (($handle = fopen($file, $type)) == false) {
-            throw new errException("Failed to write to output file.",3);
-        }
-        else {
+            throw new errException("Failed to write to output file.", 3);
+        } else {
             fclose($handle);
         }
         return $handle;
     }
-    throw new errException("Function file_handler got different parameters than expected.",500);
+    throw new errException("Function file_handler got different parameters than expected.", 500);
 }
 
 function json_validator($string)
 {
     $json = json_decode($string, false);
-    if(!is_object($json) && !is_array($string)){
-        throw new errException("Input file does not have correct JSON annotation.",4);
+    if (!is_object($json) && !is_array($string)) {
+        throw new errException("Input file does not have correct JSON annotation.", 4);
     }
     return $json;
 }
@@ -50,7 +49,7 @@ function parser($arguments, $count)
         help();
     }
     for ($i = 1; $i < $count; $i++) {
-        if (preg_match("/^--(input|output|array-name|item-name|start|types)=(.*)/", $arguments[$i], $parameters)
+        if (preg_match("/^--(input|output|array-name|item-name|start)=(.*)/", $arguments[$i], $parameters)
             || preg_match("/^-(r|h)=(.*)/", $arguments[$i], $parameters) //
         ) {   // array[param[1]] (already in array) = param[2] (new parameter parsed)
             if (empty($arg_array[$parameters[1]]) && ($parameters[2] !== NULL)) { // argument=parameter already defined
@@ -59,7 +58,7 @@ function parser($arguments, $count)
                 throw new errException("Option cannot be set twice.", 1);
             }
         } elseif (preg_match("/^-(n|s|i|l|c|a|t)$/", $arguments[$i], $parameters)
-            || preg_match("/^--(index-items|array-size)$/", $arguments[$i], $parameters)
+            || preg_match("/^--(index-items|array-size|types)$/", $arguments[$i], $parameters)
         ) {   // when regex matches options without value, [1]is option [2]is null
             if (empty($arg_array[$parameters[1]])) {
                 $arg_array[$parameters[1]] = true;
@@ -105,6 +104,7 @@ function parser($arguments, $count)
 
 
     // TODO CHECK
+
     if (empty($arg_array["array-name"])) {
         $arg_array["array-name"] = "array";
     } else {   // when array-name is changed script will check name, not valid causes error 50
@@ -115,7 +115,13 @@ function parser($arguments, $count)
     } else {   // when item-name is changed script will check name, not valid causes error 50
         $arg_array["item-name"] = check_name($arg_array["item-name"], $arg_array["h"], false);
     }
+    // TODO -R OPTIONS
 
+    if (isset($arg_array["r"])) { // Could be 0 (empty would not be enough to detect it)
+        if (!is_valid_xml_tag($arg_array["r"])) {
+            throw new errException("Invalid XML tag.", 50);
+        }
+    }
 
     return $arg_array;
 }
@@ -124,96 +130,113 @@ function parser($arguments, $count)
 /*
 ** initialization of writer and calling write_ functions
 **/
-function write($json_input, $args)
+function write($json, $arguments)
 {
-    $writer = new XMLWriter();
-    $writer->openURI($args["output"]);
-    $writer->setIndent(true);
-    if (empty($args["n"])) {   // header
-        $writer->startDocument("1.0", "UTF-8");
+    $xml = new XMLWriter();
+    $xml->openURI($arguments["output"]);
+    $xml->setIndent(true);
+    if (empty($arguments["n"])) {   // header
+        $xml->startDocument("1.0", "UTF-8");
     }
-    if (!empty($args["r"])) {   // placing result into "root-element" not valid name causes error 50
-        $writer->startElement(check_name($args["r"], $args["h"], false));
-        write_value($writer, $json_input, $args);
-        $writer->endElement();
+    if (!empty($arguments["r"])) {   // placing result into "root-element" not valid name causes error 50
+        $xml->startElement(check_name($arguments["r"], $arguments["h"], false));
+        write_value($xml, $json, $arguments);
+        $xml->endElement();
     } else {
-        write_value($writer, $json_input, $args);
+        write_value($xml, $json, $arguments);
     }
 }
 
 /*
 ** recursively called for writing objects
 */
-function write_object($writer, $object, $args)
+function write_object($xml, $object, $arguments)
 {
     foreach ($object as $key => $value) {   // when string subst is invalid character causes error 51
-        $writer->startElement(check_name($key, $args["h"], true));
-        write_value($writer, $value, $args);
-        $writer->endElement();
+        $xml->startElement(check_name($key, $arguments["h"], true));
+        write_value($xml, $value, $arguments);
+        $xml->endElement();
     }
 }
 
 /*
 ** recursively called for writing arrays
 */
-function write_array($writer, $array, $args)
+function write_array($xml, $array, $arguments)
 {
-    $writer->startElement($args["array-name"]);
-    if (!empty($args["array-size"]) || !empty($args["a"])) {
-        $writer->writeAttribute("size", count($array));
+    $xml->startElement($arguments["array-name"]);
+    if (!empty($arguments["array-size"]) || !empty($arguments["a"])) {
+        $xml->writeAttribute("size", count($array));
     }
-    $index = $args["start"];    // index counter initialization for every array
+    $index = $arguments["start"];    // counter for -t or --index-items
     foreach ($array as $key => $value) {
-        $writer->startElement($args["item-name"]);
-        if (!empty($args["index-items"]) || !empty($args["t"])) {
-            $writer->writeAttribute("index", $index++);
+        $xml->startElement($arguments["item-name"]);
+        if (!empty($arguments["index-items"]) || !empty($arguments["t"])) {
+            $xml->writeAttribute("index", $index++);
         }
-        write_value($writer, $value, $args);
-        $writer->endElement();
+        write_value($xml, $value, $arguments);
+        $xml->endElement();
     }
-    $writer->endElement();
+    $xml->endElement();
 }
 
 /*
 ** function for writing values
 */
-function write_value($writer, $value, $args)
+function write_value($xml, $value, $arguments)
 {
     if (is_object($value)) {
-        write_object($writer, $value, $args);
+        write_object($xml, $value, $arguments);
     } elseif (is_array($value)) {
-        write_array($writer, $value, $args);
+        write_array($xml, $value, $arguments);
     } elseif ((is_int($value) || is_float($value))) {
-        $value = floor($value); // need to floor number values before writing
-        if (!empty($args["i"])) {   // when option -i is set
-            $writer->text($value);
+        $number = floor($value); // number has to be floored
+        if (!empty($arguments["i"])) {   // handling -i
+            $xml->text($value);
         } else {
-            $writer->writeAttribute("value", $value);
+            $xml->writeAttribute("value", $number);
+            if (!empty($arguments["types"])) {  // handling --types
+                if (is_int($value)) {
+                    $xml->writeAttribute("type", "integer");
+                } else {
+                    $xml->writeAttribute("type", "real");
+                }
+            }
+
         }
-    } elseif ((empty($args["s"]) && is_string($value))) {
-        $writer->writeAttribute("value", $value);
-    } elseif (($value === true || $value === false || $value === null)) {   // handling litterals true false and null
-        if (!empty($args["l"])) {   // when -l option is set for replacing literal with <literal/> tag
+    } elseif ((empty($arguments["s"]) && is_string($value))) {
+        $xml->writeAttribute("value", $value);
+        if (!empty($arguments["types"])) { // handling --types
+            $xml->writeAttribute("type", "string");
+        }
+    } elseif (($value === true || $value === false || $value === null)) {  // handling literals
+        if (!empty($arguments["l"])) { // handling -l
             if ($value === true) {
-                $writer->writeElement("true");
+                $xml->writeElement("true");
             } elseif ($value === false) {
-                $writer->writeElement("false");
+                $xml->writeElement("false");
             } elseif ($value === null) {
-                $writer->writeElement("null");
+                $xml->writeElement("null");
             }
         } else {
             if ($value === true) {
-                $writer->writeAttribute("value", "true");
+                $xml->writeAttribute("value", "true");
             } elseif ($value === false) {
-                $writer->writeAttribute("value", "false");
+                $xml->writeAttribute("value", "false");
             } elseif ($value === null) {
-                $writer->writeAttribute("value", "null");
+                $xml->writeAttribute("value", "null");
             }
+            if (!empty($arguments["types"])) {
+                $xml->writeAttribute("type", "literal");
+            }
+
         }
-    } elseif (!empty($args["c"])) {   // translation of problematic characters
-        $writer->text($value);
+    } elseif (!empty($arguments["c"])) {   // translation of problematic characters
+        $xml->text($value);
     } else {
-        $writer->writeRaw($value);
+        $xml->writeRaw($value);
+
+
     }
 }
 
@@ -229,15 +252,24 @@ function check_name($name, $replacement, $allow_replace)
             $name = preg_replace($validity_rex, $replacement, $name);
             $name = preg_replace($start_char_rex, $replacement, $name);
             if (preg_match($start_char_rex, $name) || preg_match($validity_rex, $name)) {
-                throw new errException("Invalid name of XML element after substitution.",51);
+                throw new errException("Invalid name of XML element after substitution.", 51);
             }
         } else {
-            throw new errException("Invalid XML tag.",50);
+            throw new errException("Invalid XML tag.", 50);
         }
     }
     return $name;
 }
 
+function is_valid_xml_tag($name)
+{
+    try {
+        new DOMElement($name);
+    } catch (DOMException $e) {
+        return false;
+    }
+    return true;
+}
 
 // Class for handling errors (errorException is not fitting)
 class errException extends Exception
