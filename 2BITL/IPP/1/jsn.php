@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 
 try {
@@ -80,17 +79,17 @@ function parser($arguments)
     unset($arguments[0]);
 
     foreach ($arguments as $value) {
-        if (preg_match("/^--(input|output|array-name|item-name|start)=(.*)/", $value, $parameters)
-            || preg_match("/^-(r|h)=(.*)/", $value, $parameters) //
-        ) {   // array[param[1]] (already in array) = param[2] (new parameter parsed)
-            if (empty($arg_array[$parameters[1]]) && ($parameters[2] !== NULL)) { // argument=parameter already defined
+        if (preg_match('/^--(input|output|array-name|item-name|start)=(.*)/', $value, $parameters)
+            || preg_match('/^-(r|h)=(.*)/', $value, $parameters) //
+        ) {   // Array[param[1]] (already in array) = param[2] (new parameter parsed)
+            if (empty($arg_array[$parameters[1]]) && ($parameters[2] !== NULL)) { // Argument=parameter already defined
                 $arg_array[$parameters[1]] = $parameters[2];
             } else { // Argument already set - error
                 throw new ErrorException("Option cannot be set twice.", 1);
             }
-        } elseif (preg_match("/^-(n|s|i|l|c|a|t)$/", $value, $parameters)
-            || preg_match("/^--(index-items|array-size|types|help)$/", $value, $parameters)
-        ) {   // when regex matches options without value, [1]is option [2]is null
+        } elseif (preg_match('/^-(n|s|i|l|c|a|t)$/', $value, $parameters)
+            || preg_match('/^--(index-items|array-size|types|help)$/', $value, $parameters)
+        ) {   // Set parameter[1] to true, parameter[2] stays as null
             if (empty($arg_array[$parameters[1]])) {
                 $arg_array[$parameters[1]] = true;
             } else {  // Argument already set - error
@@ -115,7 +114,8 @@ function parser($arguments)
     if (empty($arg_array["output"])) {
         $arg_array["output"] = "php://stdout";
     }
-    if (empty($arg_array["h"])) {
+    // TODO -h=""
+    if (!isset($arg_array["h"])) { // Empty would not detect if subst was null
         $arg_array["h"] = "-";
     }
     if (!isset($arg_array["start"])) { // Empty would detect 0 as true
@@ -126,7 +126,7 @@ function parser($arguments)
             throw new ErrorException("Option \"--start\" has dependency on \"--index-items\" or \"-t\".", 1);
         } elseif (!ctype_digit($arg_array["start"])) {
             throw new ErrorException("Option \"--start\" requires unsigned integer value.", 1);
-        } else {   // casting to integer
+        } else { // Type juggling
             $arg_array["start"] = (int)$arg_array["start"];
         }
 
@@ -136,29 +136,23 @@ function parser($arguments)
     if (!empty($arg_array["t"]) && !empty($arg_array["index-items"])) {
         throw new ErrorException("\"-t\" and \"--index-items\" cannot be specified at the same time.", 1);
     }
-    if (!empty($arg_array["a"]) && !empty($arg_array["array-size"])) {   // when -a is set --array-size can not be set it is the same option
+    if (!empty($arg_array["a"]) && !empty($arg_array["array-size"])) {
         throw new ErrorException("\"-a\" and \"--array-size\" cannot be specified at the same time.", 1);
     }
 
-
-    // TODO CHECK
-
+    // Check whether arguments that are going to be XML tags are in correct format
     if (empty($arg_array["array-name"])) {
         $arg_array["array-name"] = "array";
-    } else {   // when array-name is changed script will check name, not valid causes error 50
-        $arg_array["array-name"] = check_name($arg_array["array-name"], $arg_array["h"], false);
+    } else {
+        $arg_array["array-name"] = validate_xml_name($arg_array["array-name"], $arg_array["h"], false);
     }
     if (empty($arg_array["item-name"])) {
         $arg_array["item-name"] = "item";
-    } else {   // when item-name is changed script will check name, not valid causes error 50
-        $arg_array["item-name"] = check_name($arg_array["item-name"], $arg_array["h"], false);
+    } else {
+        $arg_array["item-name"] = validate_xml_name($arg_array["item-name"], $arg_array["h"], false);
     }
-    // TODO -R OPTIONS
-
     if (isset($arg_array["r"])) { // Could be 0 (empty would not be enough to detect it)
-        if (!is_valid_xml_tag($arg_array["r"])) {
-            throw new ErrorException("Invalid XML tag.", 50);
-        }
+        validate_xml_name($arg_array["r"], $arg_array["h"], false);
     }
 
     return $arg_array;
@@ -177,11 +171,11 @@ function xml($json, $arguments)
     $xml->openURI($arguments["output"]);
     $xml->setIndent(true);
 
-    if (empty($arguments["n"])) {   // header
+    if (empty($arguments["n"])) {   // Handle -n
         $xml->startDocument("1.0", "UTF-8");
     }
-    if (!empty($arguments["r"])) {   // placing result into "root-element" not valid name causes error 50
-        $xml->startElement(check_name($arguments["r"], $arguments["h"], false));
+    if (!empty($arguments["r"])) {   // Handle -r
+        $xml->startElement(validate_xml_name($arguments["r"], $arguments["h"], false));
         xml_element($xml, $json, $arguments);
         $xml->endElement();
     } else {
@@ -198,8 +192,8 @@ function xml($json, $arguments)
  */
 function xml_object($xml, $object, $arguments)
 {
-    foreach ($object as $key => $value) {   // when string subst is invalid character causes error 51
-        $xml->startElement(check_name($key, $arguments["h"], true)); // substitution
+    foreach ($object as $key => $value) {
+        $xml->startElement(validate_xml_name($key, $arguments["h"], true)); // Substitution for UTF-8
         xml_element($xml, $value, $arguments);
         $xml->endElement();
     }
@@ -219,7 +213,7 @@ function xml_array($xml, $array, $arguments)
     if (!empty($arguments["array-size"]) || !empty($arguments["a"])) { // Option -a or --array-size is set
         $xml->writeAttribute("size", count($array));
     }
-    $index = $arguments["start"];    // counter for -t or --index-items
+    $index = $arguments["start"];    // Counter for -t or --index-items
     foreach ($array as $key => $value) {
         $xml->startElement($arguments["item-name"]);
         if (!empty($arguments["index-items"]) || !empty($arguments["t"])) {
@@ -249,9 +243,9 @@ function xml_element($xml, $value, $arguments)
         xml_number($xml, $value, $arguments);
     } elseif (is_string($value)) {
         xml_string($xml, $value, $arguments);
-    } elseif ((is_bool($value) || $value === null)) {  // handling literals
+    } elseif ((is_bool($value) || $value === null)) {
         xml_literal($xml, $value, $arguments);
-    } elseif (!empty($arguments["c"])) {   // translation of problematic characters
+    } elseif (!empty($arguments["c"])) { // Handle -c
         $xml->text($value);
     } else {
         $xml->writeRaw($value);
@@ -268,12 +262,12 @@ function xml_element($xml, $value, $arguments)
  */
 function xml_number($xml, $number, $arguments)
 {
-    $tmp = floor($number); // number has to be floored
-    if (!empty($arguments["i"])) {   // handling -i
+    $tmp = floor($number); // Number is floored to meet requirements
+    if (!empty($arguments["i"])) {   // Handling -i
         $xml->text($number);
     } else {
         $xml->writeAttribute("value", $tmp);
-        if (!empty($arguments["types"])) {  // handling --types
+        if (!empty($arguments["types"])) {  // Handling --types
             if (is_int($number)) {
                 $xml->writeAttribute("type", "integer");
             } else {
@@ -314,7 +308,7 @@ function xml_string($xml, $string, $arguments)
  */
 function xml_literal($xml, $literal, $arguments)
 {
-    if (!empty($arguments["l"])) { // handling -l
+    if (!empty($arguments["l"])) { // Handling -l
         if ($literal === true) {
             $xml->writeElement("true");
         } elseif ($literal === false) {
@@ -338,38 +332,32 @@ function xml_literal($xml, $literal, $arguments)
 }
 
 /**
- * @param $name
- * @param $substitution
- * @param $allow_replace
- * @return mixed
+ * Function that checks validity of given xml tag name, in case
+ * parameter $replace is set to true also substitutes invalid characters.
+ *
+ * @param $xml_name - Name of given xml tag
+ * @param $substitution - Parameter that is going to substitute invalid characters
+ * @param $replace - Bool value that enables substitution
+ * @return mixed - correct xml_tag_name
  * @throws ErrorException
  */
-function check_name($name, $substitution, $allow_replace)
+function validate_xml_name($xml_name, $substitution, $replace)
 {
-    $start_char_rex = '/^[^\p{L}|\_]/';
-    $validity_rex = '/<|>|"|\'|\/|\\|&|&/';
-    if (preg_match($start_char_rex, $name) || preg_match($validity_rex, $name)) {   // if regex matches there is invalid character
-        if ($allow_replace) {
-            $name = preg_replace($validity_rex, $substitution, $name);
-            $name = preg_replace($start_char_rex, $substitution, $name);
-            if (preg_match($start_char_rex, $name) || preg_match($validity_rex, $name)) {
+    $valid_start_char = '/^[^\p{L}\_]/'; // Regex of invalid starting characters (\p{L} - unicode letter)
+    $valid_char = '/[&<>"\'\/\\]/'; // Regex of invalid characters globally in XML format
+
+    if (preg_match($valid_start_char, $xml_name) || preg_match($valid_char, $xml_name)) { // Whenever match is found, XML is invalid
+        if ($replace) {
+            $xml_name = preg_replace($valid_char, $substitution, $xml_name);
+            $xml_name = preg_replace($valid_start_char, $substitution, $xml_name);
+            if (preg_match($valid_start_char, $xml_name) || preg_match($valid_char, $xml_name)) { // Whenever match is found, XML after substitution is invalid
                 throw new ErrorException("Invalid name of XML element after substitution.", 51);
             }
         } else {
             throw new ErrorException("Invalid XML tag.", 50);
         }
     }
-    return $name;
-}
-
-function is_valid_xml_tag($name)
-{
-    try {
-        new DOMElement($name);
-    } catch (DOMException $e) {
-        throw new ErrorException("Invalid XML tag.", 50);
-    }
-    return true;
+    return $xml_name;
 }
 
 /**
@@ -378,60 +366,38 @@ function is_valid_xml_tag($name)
 function help()
 {
     echo " 
-    --help viz společné zadání všech úloh
-    
-    --input=filename zadaný vstupní JSON soubor v kódování UTF-8
-    
-    --output=filename textový výstupní XML soubor v kódování UTF-8 s obsahem převedeným
-ze vstupního souboru.
-
-    -h=subst ve jméně elementu odvozeném z dvojice jméno-hodnota nahraďte každý nepovolený
-znak ve jméně XML značky řetězcem subst. Implicitně (i při nezadaném parametru -h) uvažujte
-nahrazování znakem pomlčka (-). Vznikne-li po nahrazení invalidní jméno XML elementu,
-skončete s chybou a návratovým kódem 51.
-
-    -n negenerovat XML hlavičku na výstup skriptu (vhodné například v případě kombinování
-více výsledků).
-
-    -r=root-element jméno párového kořenového elementu obalujícího výsledek. Pokud nebude
-zadán, tak se výsledek neobaluje kořenovým elementem, ač to potenciálně porušuje validitu
-XML (skript neskončí s chybou). Zadání řetězce root-element vedoucího na nevalidní XML
-značku ukončí skript s chybou a návratovým kódem 50 (nevalidní znaky nenahrazujte).
-
-    --array-name=array-element tento parametr umožní přejmenovat element obalující pole
-z implicitní hodnoty array na array-element. Zadání řetězce array-element vedoucího na
-nevalidní XML značku ukončí skript s chybou a návratovým kódem 50 (nevalidní znaky nenahrazujte).
-
-    --item-name=item-element analogicky, tímto parametrem lze změnit jméno elementu pro
-prvky pole (implicitní hodnota je item). Zadání řetězce item-element vedoucího na nevalidní
-XML značku ukončí skript s chybou a návratovým kódem 50 (nevalidní znaky nenahrazujte).
-
-    -s hodnoty (v dvojici i v poli) typu string budou transformovány na textové elementy místo
-atributů.
-
-    -i hodnoty (v dvojici i v poli) typu number budou transformovány na textové elementy místo
-atributů.
-
-    -l hodnoty literálů (true, false, null) budou transformovány na elementy true,
-false a null místo na atributy.
-
-    -c tento přepínač oproti implicitnímu chování aktivuje překlad problematických znaků. Pro
-XML problematické znaky s UTF-8 kódem menším jak 128 ve vstupních řetězcových hodnotách
-(ve dvojicích i polích) konvertujte na odpovídající zápisy v XML pomocí metaznaku & (např.
-&amp;, &lt;, &gt; atd.). Ostatní problematické znaky konvertovat nemusíte.
-
-    -a, --array-size u pole bude doplněn atribut size s uvedením počtu prvků v tomto poli.
-    
-    -t, --index-items ke každému prvku pole bude přidán atribut index s určením indexu prvku
-v tomto poli (číslování začíná od 1, pokud není parametrem --start určeno jinak).
-
-    --start=n inicializace inkrementálního čitače pro indexaci prvků pole (nutno kombinovat
-s parametrem --index-items, jinak chyba s návratovým kódem 1) na zadané kladné celé číslo
-n včetně nuly (implicitně n = 1).
-
-    --types obalující element každé skalární hodnoty bude doplněn o atribut type obsahující
-hodnotu integer pro původní celočíselnou hodnotu, real pro původní desetinnou hodnotu,
-string pro řetězec a literal pro hodnoty literálů.
+    --help 
+            Prints out help
+    --input=filename 
+            JSON file to be decoded (UTF-8)
+    --output=filename 
+            XML file which is encoded input JSON file (UTF-8)
+    -h=subst 
+            Each invalid character in XML tag is replaced with \"subst\"
+    -n 
+            Do not generate XML header
+    -r=root-element 
+            Name of pair root element containing XML result is set to \"root-element\"
+    --array-name=array-element 
+            Rename element containing array to \"array-element\"   
+    --item-name=item-element 
+            Rename element containing each item to \"item-element\"
+    -s 
+            String values are transformed to text elements instead of attributes
+    -i 
+            Number values are transformed to text elements instead of attributes
+    -l 
+            Literal values are transformed to text elements instead of attributes
+    -c 
+            Enables translation of problematic characters such as &, <, >, etc
+    -a, --array-size 
+            Each array is given attribute of its size
+    -t, --index-items 
+            Each item in array is given attribute of his index
+    --start=n 
+            Initialization of counter for index-items. Requires -t or --index-items
+    --types 
+            Wrapping element of each scalar value has attribute containing their type
 ";
     die(0);
 }
