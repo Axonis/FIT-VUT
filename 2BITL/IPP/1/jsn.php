@@ -344,10 +344,10 @@ function xml_literal($xml, $literal, $arguments)
 function validate_xml_name($xml_name, $substitution, $replace)
 {
     $valid_start_char = '/^[^\p{L}\_]/'; // Regex of invalid starting characters (\p{L} - unicode letter)
-    $valid_char = '/[&<>"\'\/\\]/'; // Regex of invalid characters globally in XML format
+    $valid_char = '/[&<>"\']/'; // Regex of invalid characters globally in XML format (&,<,>,",')
 
-    if (preg_match($valid_start_char, $xml_name) || preg_match($valid_char, $xml_name)) { // Whenever match is found, XML is invalid
-        if ($replace) {
+    if (preg_match(preg_quote($valid_start_char), $xml_name) || preg_match(preg_quote($valid_char), $xml_name)) { // Whenever match is found, XML is invalid
+	if ($replace) {
             $xml_name = preg_replace($valid_char, $substitution, $xml_name);
             $xml_name = preg_replace($valid_start_char, $substitution, $xml_name);
             if (preg_match($valid_start_char, $xml_name) || preg_match($valid_char, $xml_name)) { // Whenever match is found, XML after substitution is invalid
