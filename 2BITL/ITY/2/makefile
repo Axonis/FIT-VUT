@@ -6,7 +6,7 @@
 # Datum: 8.3.2017
 
 CC = latex
-NAME = proj1
+NAME = proj2
 PS = dvips -t a4
 PDF = ps2pdf
 
