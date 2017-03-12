@@ -1,5 +1,6 @@
 <?php
 
+#JSN:xurban66
 try {
     $arguments = parser($argv);
     $input = file_handler($arguments["input"], "r");
@@ -111,6 +112,9 @@ function parser($arguments)
         $arg_array["item-name"] = validate_xml_name($arg_array["item-name"], $arg_array["h"], false);
     }
     if (isset($arg_array["r"])) { // Could be 0 (empty would not be enough to detect it)
+        if ($arg_array["r"] === ""){
+            throw new ErrorException("Empty root element leads to incorrect XML tag.", 1);
+        }
         validate_xml_name($arg_array["r"], $arg_array["h"], false);
     }
 
@@ -160,7 +164,7 @@ function xml_object($xml, $object, $arguments)
 
 /**
  * Function that is being recursively called in case json element is array.
- * Handles array size and index items options.
+ * Handles --array-size, --index-items and --padding options.
  *
  * @param $xml - handle for XMLWriter
  * @param $array - array to be handled in case array size option is defined
@@ -174,7 +178,10 @@ function xml_array($xml, $array, $arguments)
     }
 
     $index = $arguments["start"]; // Counter for -t or --index-items
-    $padding = strlen($index + count($array) - 1); // Length of number containing zeroes
+
+    if (!empty($arguments["padding"])) {
+        $padding = strlen($index + count($array) - 1); // Length of number containing zeroes
+    }
 
     foreach ($array as $key => $value) {
         $xml->startElement($arguments["item-name"]);
@@ -410,6 +417,8 @@ function help()
             Initialization of counter for index-items. Requires -t or --index-items
     --types 
             Wrapping element of each scalar value has attribute containing their type
+    --padding
+            Pads numbers of --index-items with 0 from left to obtain same length of each string
 ";
     die(0);
 }
