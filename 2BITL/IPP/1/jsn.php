@@ -13,52 +13,6 @@ try {
 }
 
 /**
- * Function handles file operations
- *
- * @param $file - file to be handled
- * @param $type - type of operation with file
- * @return resource|string
- * @throws ErrorException
- */
-function file_handler($file, $type)
-{
-    //This function may return Boolean FALSE, but may also return a non-Boolean value which evaluates to FALSE.
-    // Please read the section on Booleans for more information. Use the === operator for testing the return value of this function.
-    if ($type == "r") {
-        if (($handle = file_get_contents($file)) === false) {
-            throw new ErrorException("Failed to read input file.", 2);
-        }
-        return $handle;
-    }
-
-    if ($type == "w") {
-        if (($handle = fopen($file, $type)) == false) {
-            throw new ErrorException("Failed to write to output file.", 3);
-        } else {
-            fclose($handle);
-        }
-        return $handle;
-    }
-    throw new ErrorException("Function file_handler got different parameters than expected.", 500);
-}
-
-/**
- * Function validates whether input file is in required JSON annotation
- *
- * @param $string - raw string input from file
- * @return mixed - array of JSON elements
- * @throws ErrorException
- */
-function json_validator($string)
-{
-    $json = json_decode($string, false); // Not using associative array option to handle array names as objects
-    if (!json_last_error() == JSON_ERROR_NONE) {
-        throw new ErrorException("Input file does not have correct JSON annotation.", 4);
-    }
-    return $json;
-}
-
-/**
  * Function parses input from CLI and fills respective array counterparts
  * if given option is set. Set arguments are subsequently checked if their format
  * is correct, eventually default value for unset arguments is set.
@@ -80,28 +34,28 @@ function parser($arguments)
 
     foreach ($arguments as $value) {
         if (preg_match('/^--(input|output|array-name|item-name|start)=(.*)/', $value, $parameters)
-            || preg_match('/^-(r|h)=(.*)/', $value, $parameters) //
+            or preg_match('/^-(r|h)=(.*)/', $value, $parameters) //
         ) {   // Array[param[1]] (already in array) = param[2] (new parameter parsed)
-            if (empty($arg_array[$parameters[1]]) && ($parameters[2] !== NULL)) { // Argument=parameter already defined
+            if (empty($arg_array[$parameters[1]]) and ($parameters[2] !== NULL)) { // Argument=parameter already defined
                 $arg_array[$parameters[1]] = $parameters[2];
             } else { // Argument already set - error
-                throw new ErrorException("Option cannot be set twice.", 1);
+                throw new ErrorException("Option cannot be set twice. \"$value\" ", 1);
             }
         } elseif (preg_match('/^-(n|s|i|l|c|a|t)$/', $value, $parameters)
-            || preg_match('/^--(index-items|array-size|types|help)$/', $value, $parameters)
+            or preg_match('/^--(index-items|array-size|types|help|padding)$/', $value, $parameters)
         ) {   // Set parameter[1] to true, parameter[2] stays as null
             if (empty($arg_array[$parameters[1]])) {
                 $arg_array[$parameters[1]] = true;
             } else {  // Argument already set - error
-                throw new ErrorException("Option cannot be set twice.", 1);
+                throw new ErrorException("Option cannot be set twice. \"$value\" ", 1);
             }
         } else { // Set argument that is not defined
-            throw new ErrorException("Option not defined.", 1);
+            throw new ErrorException("Option not defined. \"$value\" ", 1);
         }
     }
 
     // Option help is defined
-    if (!empty($arg_array["help"]) && count($arg_array) == 1) {
+    if (!empty($arg_array["help"]) and count($arg_array) == 1) {
         help();
     } elseif (!empty($arg_array["help"])) {
         throw new ErrorException("Option \"--help\" has to be only argument.", 1);
@@ -122,21 +76,26 @@ function parser($arguments)
         $arg_array["start"] = 1;
     } else {
         // Check dependency of start and index-items
-        if (empty($arg_array["t"]) && empty($arg_array["index-items"])) {
+        if (empty($arg_array["t"]) and empty($arg_array["index-items"])) {
             throw new ErrorException("Option \"--start\" has dependency on \"--index-items\" or \"-t\".", 1);
-        } elseif (!ctype_digit($arg_array["start"])) {
-            throw new ErrorException("Option \"--start\" requires unsigned integer value.", 1);
-        } else { // Type juggling
-            $arg_array["start"] = (int)$arg_array["start"];
         }
+        if (!ctype_digit($arg_array["start"])) {
+            throw new ErrorException("Option \"--start\" requires unsigned integer value.", 1);
+        }
+    }
 
+    // Check dependency of padding and index-items
+    if (!empty($arg_array["padding"])) {
+        if (empty($arg_array["t"]) and empty($arg_array["index-items"])) {
+            throw new ErrorException("Option \"padding\" has dependency on \"--index-items\"  or \"- t\".", 1);
+        }
     }
 
     // Same short and long options set at the same time
-    if (!empty($arg_array["t"]) && !empty($arg_array["index-items"])) {
+    if (!empty($arg_array["t"]) and !empty($arg_array["index-items"])) {
         throw new ErrorException("\"-t\" and \"--index-items\" cannot be specified at the same time.", 1);
     }
-    if (!empty($arg_array["a"]) && !empty($arg_array["array-size"])) {
+    if (!empty($arg_array["a"]) and !empty($arg_array["array-size"])) {
         throw new ErrorException("\"-a\" and \"--array-size\" cannot be specified at the same time.", 1);
     }
 
@@ -210,13 +169,19 @@ function xml_object($xml, $object, $arguments)
 function xml_array($xml, $array, $arguments)
 {
     $xml->startElement($arguments["array-name"]);
-    if (!empty($arguments["array-size"]) || !empty($arguments["a"])) { // Option -a or --array-size is set
+    if (!empty($arguments["array-size"]) or !empty($arguments["a"])) { // Option -a or --array-size is set
         $xml->writeAttribute("size", count($array));
     }
-    $index = $arguments["start"];    // Counter for -t or --index-items
+
+    $index = $arguments["start"]; // Counter for -t or --index-items
+    $padding = strlen($index + count($array) - 1); // Length of number containing zeroes
+
     foreach ($array as $key => $value) {
         $xml->startElement($arguments["item-name"]);
-        if (!empty($arguments["index-items"]) || !empty($arguments["t"])) {
+        if (!empty($arguments["index-items"]) or !empty($arguments["t"])) {
+            if (!empty($arguments["padding"])) {
+                $index = str_pad($index, $padding, '0', STR_PAD_LEFT);
+            }
             $xml->writeAttribute("index", $index++);
         }
         xml_element($xml, $value, $arguments);
@@ -239,11 +204,11 @@ function xml_element($xml, $value, $arguments)
         xml_object($xml, $value, $arguments);
     } elseif (is_array($value)) {
         xml_array($xml, $value, $arguments);
-    } elseif ((is_int($value) || is_float($value))) {
+    } elseif ((is_int($value) or is_float($value))) {
         xml_number($xml, $value, $arguments);
     } elseif (is_string($value)) {
         xml_string($xml, $value, $arguments);
-    } elseif ((is_bool($value) || $value === null)) {
+    } elseif ((is_bool($value) or $value === null)) {
         xml_literal($xml, $value, $arguments);
     } elseif (!empty($arguments["c"])) { // Handle -c
         $xml->text($value);
@@ -344,20 +309,67 @@ function xml_literal($xml, $literal, $arguments)
 function validate_xml_name($xml_name, $substitution, $replace)
 {
     $valid_start_char = '/^[^\p{L}\_]/'; // Regex of invalid starting characters (\p{L} - unicode letter)
-    $valid_char = '/[&<>"\']/'; // Regex of invalid characters globally in XML format (&,<,>,",')
+    $valid_char = '/[\{\}\[\]()|=!@#$%^`*~,+&<>"\'\/\\\]/'; // Regex of invalid characters globally in XML format
 
-    if (preg_match(preg_quote($valid_start_char), $xml_name) || preg_match(preg_quote($valid_char), $xml_name)) { // Whenever match is found, XML is invalid
-	if ($replace) {
-            $xml_name = preg_replace($valid_char, $substitution, $xml_name);
-            $xml_name = preg_replace($valid_start_char, $substitution, $xml_name);
-            if (preg_match($valid_start_char, $xml_name) || preg_match($valid_char, $xml_name)) { // Whenever match is found, XML after substitution is invalid
-                throw new ErrorException("Invalid name of XML element after substitution.", 51);
+    if (preg_match($valid_start_char, $xml_name) or preg_match($valid_char, $xml_name)) { // Whenever match is found, XML is invalid
+        if ($replace) {
+
+            $xml_name = preg_replace($valid_start_char, $substitution, $xml_name); // Substitutes everything that is not letter or underscore
+            $xml_name = preg_replace($valid_char, $substitution, $xml_name); // Substitutes each invalid char found in xml_name
+
+            if (preg_match($valid_start_char, $xml_name) or preg_match($valid_char, $xml_name)) { // Whenever match is found, XML after substitution is invalid
+                throw new ErrorException("Invalid name of XML element after substitution. \"$xml_name\" ", 51);
             }
         } else {
-            throw new ErrorException("Invalid XML tag.", 50);
+            throw new ErrorException("Invalid XML tag. \"$xml_name\" ", 50);
         }
     }
     return $xml_name;
+}
+
+/**
+ * Function handles file operations
+ *
+ * @param $file - file to be handled
+ * @param $type - type of operation with file
+ * @return resource|string
+ * @throws ErrorException
+ */
+function file_handler($file, $type)
+{
+    //This function may return Boolean FALSE, but may also return a non-Boolean value which evaluates to FALSE.
+    // Please read the section on Booleans for more information. Use the === operator for testing the return value of this function.
+    if ($type == "r") {
+        if (($string = file_get_contents($file)) === false) {
+            throw new ErrorException("Failed to read input file.", 2);
+        }
+        return $string;
+    }
+
+    if ($type == "w") {
+        if (($handle = fopen($file, $type)) == false) {
+            throw new ErrorException("Failed to write to output file.", 3);
+        } else {
+            fclose($handle);
+        }
+        return $handle;
+    }
+}
+
+/**
+ * Function validates whether input file is in required JSON annotation
+ *
+ * @param $string - raw string input from file
+ * @return mixed - array of JSON elements
+ * @throws ErrorException
+ */
+function json_validator($string)
+{
+    $json = json_decode($string, false); // Not using associative array option to handle array names as objects
+    if (!json_last_error() == JSON_ERROR_NONE) {
+        throw new ErrorException("Input file does not have correct JSON annotation.", 4);
+    }
+    return $json;
 }
 
 /**
