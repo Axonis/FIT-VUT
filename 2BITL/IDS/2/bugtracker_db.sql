@@ -5,6 +5,9 @@ DROP TABLE IF EXISTS Bug ;
 DROP TABLE IF EXISTS Modul;
 DROP TABLE IF EXISTS Programator;
 DROP TABLE IF EXISTS Ticket;
+DROP TABLE IF EXISTS Patch;
+DROP TABLE IF EXISTS Test;
+
 
 
 SET FOREIGN_KEY_CHECKS=1;
@@ -38,11 +41,36 @@ CREATE TABLE Ticket (
   PRIMARY KEY(ID_ticket)
 );
 
+CREATE TABLE Patch(
+  ID_patch int NOT NULL,
+  Schvalenie bit,
+  Datum_vydania date,
+  Datum_zavedenia date,
 
-CREATE TABLE Uzivatel(
+  Nickname varchar(64),
 
-  Nickname int NOT NULL,
-  Meno varchar(128) NOT NULLa,
+
+  PRIMARY KEY (ID_patch)
+);
+
+
+CREATE TABLE Test (
+  ID_test int NOT NULL,
+  Datum_zaciatku datetime,
+  Datum_konca datetime,
+  Hodnotenie float,
+
+  ID_patch int,
+  Nickname varchar(64),
+
+  PRIMARY KEY (ID_test)
+);
+
+
+CREATE TABLE Uzivatel (
+
+  Nickname varchar(64) NOT NULL,
+  Meno varchar(128) NOT NULL,
   Vek int,
   Programovaci_jazyk varchar(512),
 
@@ -59,33 +87,6 @@ CREATE TABLE Uzivatel(
   FOREIGN KEY (ID_patch)	REFERENCES Patch(ID_patch)
 );
 
-CREATE TABLE Test(
-  ID_test int NOT NULL,
-  Datum_zaciatku datetime,
-  Datum_konca datetime,
-  Hodnotenie float,
-
-  ID_patch int NOT NULL,
-  ID_uzivatel,
-
-  PRIMARY KEY (ID_test),
-  FOREIGN KEY (ID_patch)	REFERENCES Patch(ID_patch),
-  FOREIGN KEY (ID_uzivatel)	REFERENCES Uzivatel(ID_uzivatel)
-
-);
-
-CREATE TABLE Patch(
-  ID_patch int NOT NULL,
-  Schvalenie bit,
-  Datum_vydania date,
-  Datum_zavedenia date,
-
-  ID_uzivatel,
-
-  PRIMARY KEY (ID_patch)
-);
-
-
 
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy) VALUES('1', '1.72', '2016-12-30');
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy) VALUES('2', '2.83', '2017-03-24');
@@ -98,7 +99,5 @@ INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost) VALUES('2190789', '3', 'Inter
 INSERT INTO Ticket (ID_ticket, Datum_podania, Stav) VALUES('46864', '2017-03-23', 'Open');
 INSERT INTO Ticket (ID_ticket, Datum_podania, Stav) VALUES('48864', '2017-02-13', 'Assigned');
 INSERT INTO Ticket (ID_ticket, Datum_podania, Stav) VALUES('41864', '2017-01-23', 'New');
-
-
 
 
