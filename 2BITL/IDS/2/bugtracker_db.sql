@@ -13,7 +13,7 @@ DROP TABLE Bezny_uzivatel   CASCADE CONSTRAINTS;
 
 
 CREATE TABLE Modul (
-  ID_modul int NOT NULL,
+  ID_modul int NOT NULL UNIQUE,
   chybovost float DEFAULT NULL,
   datum_poslednej_upravy date DEFAULT NULL,
   
@@ -23,7 +23,7 @@ CREATE TABLE Modul (
 );
 
 CREATE TABLE Bug (
-  ID_bug int NOT NULL,
+  ID_bug int NOT NULL UNIQUE,
   Typ NVARCHAR2(128), /*Arithmetic, Logic, Syntax, Resource, Multi-threading, Interfacing, Performance, Not a bug*/
   Zavaznost NVARCHAR2(128), /*Low, Medium, High*/
   ID_modul int NOT NULL,
@@ -33,17 +33,17 @@ CREATE TABLE Bug (
 );
 
 CREATE TABLE Ticket (
-  ID_ticket int NOT NULL,
+  ID_ticket int NOT NULL UNIQUE,
   Datum_podania date NOT NULL,
   Stav NVARCHAR2(128), /*New, Assigned, Open, Need Info, Closed*/
   Nickname_prideleny NVARCHAR2(64),
-  Nickname_vyvoreny NVARCHAR2(64),
+  Nickname_vyvoreny NVARCHAR2(64) NOT NULL,
 
   PRIMARY KEY(ID_ticket)
 );
 
 CREATE TABLE Patch(
-  ID_patch int NOT NULL,
+  ID_patch int NOT NULL UNIQUE,
   Schvalenie int,
   Datum_vydania date,
   Datum_zavedenia date,
@@ -54,7 +54,7 @@ CREATE TABLE Patch(
 );
 
 CREATE TABLE Test (
-  ID_test int NOT NULL,
+  ID_test int NOT NULL UNIQUE,
   Datum_zaciatku DATE,
   Datum_konca DATE,
   Hodnotenie float,
@@ -68,7 +68,7 @@ CREATE TABLE Test (
 
 CREATE TABLE Uzivatel (
 
-  Nickname NVARCHAR2(64) NOT NULL,
+  Nickname NVARCHAR2(64) NOT NULL UNIQUE,
   Meno NVARCHAR2(128) NOT NULL,
   Vek int,
   Programovaci_jazyk NVARCHAR2(512),
@@ -107,7 +107,7 @@ CREATE TABLE Charakterizuje (
 );
 
 CREATE TABLE Zranitelnost(
-  ID_vulnerablity INT NOT NULL,
+  ID_vulnerablity INT UNIQUE NOT NULL,
   Miera_nebezpecenstva NVARCHAR2(64),
   Moznost_zneuzitia NVARCHAR2(64),
   
