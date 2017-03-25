@@ -1,16 +1,13 @@
-SET FOREIGN_KEY_CHECKS=0;
-
-
-DROP TABLE IF EXISTS Bug ;
-DROP TABLE IF EXISTS Modul;
-DROP TABLE IF EXISTS Programator;
-DROP TABLE IF EXISTS Ticket;
-DROP TABLE IF EXISTS Patch;
-DROP TABLE IF EXISTS Test;
-
-
-
-SET FOREIGN_KEY_CHECKS=1;
+DROP TABLE Bug      CASCADE CONSTRAINTS;
+DROP TABLE Modul    CASCADE CONSTRAINTS;
+DROP TABLE Uzivatel CASCADE CONSTRAINTS;
+DROP TABLE Ticket   CASCADE CONSTRAINTS;
+DROP TABLE Patch    CASCADE CONSTRAINTS;
+DROP TABLE Test     CASCADE CONSTRAINTS;
+DROP TABLE Charakterizuje   CASCADE CONSTRAINTS;
+DROP TABLE Zranitelnost     CASCADE CONSTRAINTS;
+DROP TABLE Programator      CASCADE CONSTRAINTS;
+DROP TABLE Bezny_uzivatel   CASCADE CONSTRAINTS;
 
 
 
@@ -25,43 +22,40 @@ CREATE TABLE Modul (
 CREATE TABLE Bug (
   ID_bug int NOT NULL,
   ID_modul int NOT NULL,
-  Typ varchar(128), /*Arithmetic, Logic, Syntax, Resource, Multi-threading, Interfacing, Performance, Not a bug*/
-  Zavaznost varchar(128), /*Low, Medium, High*/
+  Typ NVARCHAR2(128), /*Arithmetic, Logic, Syntax, Resource, Multi-threading, Interfacing, Performance, Not a bug*/
+  Zavaznost NVARCHAR2(128), /*Low, Medium, High*/
 
 
-  PRIMARY KEY (ID_bug),
-  FOREIGN KEY (ID_modul) REFERENCES Modul(ID_modul)
+  PRIMARY KEY (ID_bug)
 );
 
 CREATE TABLE Ticket (
   ID_ticket int NOT NULL,
   Datum_podania date NOT NULL,
-  Stav varchar(128), /*New, Assigned, Open, Need Info, Closed*/
+  Stav NVARCHAR2(128), /*New, Assigned, Open, Need Info, Closed*/
 
   PRIMARY KEY(ID_ticket)
 );
 
 CREATE TABLE Patch(
   ID_patch int NOT NULL,
-  Schvalenie bit,
+  Schvalenie int,
   Datum_vydania date,
   Datum_zavedenia date,
 
   Nickname varchar(64),
 
-
   PRIMARY KEY (ID_patch)
 );
 
-
 CREATE TABLE Test (
   ID_test int NOT NULL,
-  Datum_zaciatku datetime,
-  Datum_konca datetime,
+  Datum_zaciatku DATE,
+  Datum_konca DATE,
   Hodnotenie float,
 
   ID_patch int,
-  Nickname varchar(64),
+  Nickname NVARCHAR2(64),
 
   PRIMARY KEY (ID_test)
 );
@@ -69,10 +63,10 @@ CREATE TABLE Test (
 
 CREATE TABLE Uzivatel (
 
-  Nickname varchar(64) NOT NULL,
-  Meno varchar(128) NOT NULL,
+  Nickname NVARCHAR2(64) NOT NULL,
+  Meno NVARCHAR2(128) NOT NULL,
   Vek int,
-  Programovaci_jazyk varchar(512),
+  Programovaci_jazyk NVARCHAR2(512),
 
   ID_modul int,
   ID_ticket int,
@@ -80,13 +74,45 @@ CREATE TABLE Uzivatel (
   ID_patch int,
 
 
-  PRIMARY KEY (Nickname),
-  FOREIGN KEY (ID_ticket)       REFERENCES Ticket(ID_ticket),
-  FOREIGN KEY (ID_modul)        REFERENCES Modul(ID_modul),
-  FOREIGN KEY (ID_test)		REFERENCES Test(ID_test),
-  FOREIGN KEY (ID_patch)	REFERENCES Patch(ID_patch)
+  PRIMARY KEY (Nickname)
 );
 
+CREATE TABLE Bezny_uzivatel (
+  Nickname NVARCHAR2(64) NOT NULL,
+  Odmena INT,
+  Karma INT,
+  
+  PRIMARY KEY (Nickname)
+);
+
+CREATE TABLE Programator (
+  Nickname NVARCHAR2(64) NOT NULL,
+  Produkt NVARCHAR2(64),
+  Rank INT,
+  
+  PRIMARY KEY (Nickname)
+);
+
+
+CREATE TABLE Charakterizuje (
+  ID_ticket int NOT NULL,
+  ID_bug int NOT NULL,
+
+  Datum_vyskytu DATE,
+  Frekvencia_vyskytu INT,
+  Popis_vyskytu NVARCHAR2(512),
+  Popis_problemu NVARCHAR2(512),
+
+  PRIMARY KEY (ID_ticket,ID_bug)
+);
+
+CREATE TABLE Zranitelnost(
+  ID_vulnerablity INT NOT NULL,
+  Miera_nebezpecenstva NVARCHAR2(64),
+  Moznost_zneuzitia NVARCHAR2(64),
+  
+  PRIMARY KEY (ID_vulnerablity)
+);
 
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy) VALUES('1', '1.72', '2016-12-30');
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy) VALUES('2', '2.83', '2017-03-24');
