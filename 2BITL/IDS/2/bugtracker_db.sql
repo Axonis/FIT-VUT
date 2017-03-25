@@ -16,15 +16,18 @@ CREATE TABLE Modul (
   ID_modul int NOT NULL,
   chybovost float DEFAULT NULL,
   datum_poslednej_upravy date DEFAULT NULL,
+  
+  Nickname NVARCHAR2(64),
+  
   PRIMARY KEY (ID_modul)
 );
 
 CREATE TABLE Bug (
   ID_bug int NOT NULL,
-  ID_modul int NOT NULL,
   Typ NVARCHAR2(128), /*Arithmetic, Logic, Syntax, Resource, Multi-threading, Interfacing, Performance, Not a bug*/
   Zavaznost NVARCHAR2(128), /*Low, Medium, High*/
-
+  ID_modul int NOT NULL,
+  ID_patch int, 
 
   PRIMARY KEY (ID_bug)
 );
@@ -33,6 +36,8 @@ CREATE TABLE Ticket (
   ID_ticket int NOT NULL,
   Datum_podania date NOT NULL,
   Stav NVARCHAR2(128), /*New, Assigned, Open, Need Info, Closed*/
+  Nickname_prideleny NVARCHAR2(64),
+  Nickname_vyvoreny NVARCHAR2(64),
 
   PRIMARY KEY(ID_ticket)
 );
@@ -43,7 +48,7 @@ CREATE TABLE Patch(
   Datum_vydania date,
   Datum_zavedenia date,
 
-  Nickname varchar(64),
+  Nickname NVARCHAR2(64),
 
   PRIMARY KEY (ID_patch)
 );
@@ -68,17 +73,11 @@ CREATE TABLE Uzivatel (
   Vek int,
   Programovaci_jazyk NVARCHAR2(512),
 
-  ID_modul int,
-  ID_ticket int,
-  ID_test int,
-  ID_patch int,
-
-
   PRIMARY KEY (Nickname)
 );
 
 CREATE TABLE Bezny_uzivatel (
-  Nickname NVARCHAR2(64) NOT NULL,
+  Nickname NVARCHAR2(64) NOT NULL REFERENCES Uzivatel(Nickname),
   Odmena INT,
   Karma INT,
   
@@ -86,12 +85,13 @@ CREATE TABLE Bezny_uzivatel (
 );
 
 CREATE TABLE Programator (
-  Nickname NVARCHAR2(64) NOT NULL,
+  Nickname NVARCHAR2(64) NOT NULL REFERENCES Uzivatel(Nickname),
   Produkt NVARCHAR2(64),
   Rank INT,
   
-  PRIMARY KEY (Nickname)
+  PRIMARY KEY (Nickname) 
 );
+
 
 
 CREATE TABLE Charakterizuje (
@@ -113,6 +113,26 @@ CREATE TABLE Zranitelnost(
   
   PRIMARY KEY (ID_vulnerablity)
 );
+
+/*ALTER TABLE Klient ADD CONSTRAINT PK_klient PRIMARY KEY (r_cislo);
+ALTER TABLE Ucet ADD CONSTRAINT FK_ucet_rcislo FOREIGN KEY (r_cislo) 
+   REFERENCES Klient ON DELETE CASCADE;
+*/
+
+ALTER TABLE Modul ADD FOREIGN KEY (Nickname) REFERENCES Uzivatel;
+ALTER TABLE Bug ADD FOREIGN KEY (ID_modul) REFERENCES Modul;
+ALTER TABLE Bug ADD FOREIGN KEY (ID_patch) REFERENCES Patch;
+ALTER TABLE Ticket ADD FOREIGN KEY (Nickname_prideleny) REFERENCES Uzivatel(Nickname);
+ALTER TABLE Ticket ADD FOREIGN KEY (Nickname_vyvoreny) REFERENCES Uzivatel(Nickname);
+
+ALTER TABLE Patch ADD FOREIGN KEY (Nickname) REFERENCES Uzivatel(Nickname);
+ALTER TABLE Test ADD FOREIGN KEY (ID_patch) REFERENCES Patch(ID_patch);
+ALTER TABLE Test ADD FOREIGN KEY (Nickname) REFERENCES Uzivatel(Nickname);
+
+ALTER TABLE Charakterizuje ADD FOREIGN KEY (ID_ticket) REFERENCES Ticket(ID_ticket);
+ALTER TABLE Charakterizuje ADD FOREIGN KEY (ID_bug) REFERENCES Bug(ID_bug);
+
+
 
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy) VALUES('1', '1.72', '2016-12-30');
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy) VALUES('2', '2.83', '2017-03-24');
