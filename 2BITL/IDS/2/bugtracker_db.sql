@@ -13,7 +13,7 @@ DROP TABLE Bezny_uzivatel   CASCADE CONSTRAINTS;
 
 
 CREATE TABLE Modul (
-  ID_modul int NOT NULL UNIQUE,
+  ID_modul int NOT NULL ,
   chybovost float DEFAULT NULL,
   datum_poslednej_upravy date DEFAULT NULL,
   
@@ -23,7 +23,7 @@ CREATE TABLE Modul (
 );
 
 CREATE TABLE Bug (
-  ID_bug int NOT NULL UNIQUE,
+  ID_bug int NOT NULL ,
   Typ NVARCHAR2(128), /*Arithmetic, Logic, Syntax, Resource, Multi-threading, Interfacing, Performance, Not a bug*/
   Zavaznost NVARCHAR2(128), /*Low, Medium, High*/
   ID_modul int NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE Bug (
 );
 
 CREATE TABLE Ticket (
-  ID_ticket int NOT NULL UNIQUE,
+  ID_ticket int NOT NULL ,
   Datum_podania date NOT NULL,
   Stav NVARCHAR2(128), /*New, Assigned, Open, Need Info, Closed*/
   Nickname_prideleny NVARCHAR2(64),
@@ -43,7 +43,7 @@ CREATE TABLE Ticket (
 );
 
 CREATE TABLE Patch(
-  ID_patch int NOT NULL UNIQUE,
+  ID_patch int NOT NULL ,
   Schvalenie int,
   Datum_vydania date,
   Datum_zavedenia date,
@@ -54,7 +54,7 @@ CREATE TABLE Patch(
 );
 
 CREATE TABLE Test (
-  ID_test int NOT NULL UNIQUE,
+  ID_test int NOT NULL ,
   Datum_zaciatku DATE,
   Datum_konca DATE,
   Hodnotenie float,
@@ -68,7 +68,7 @@ CREATE TABLE Test (
 
 CREATE TABLE Uzivatel (
 
-  Nickname NVARCHAR2(64) NOT NULL UNIQUE,
+  Nickname NVARCHAR2(64) NOT NULL ,
   Meno NVARCHAR2(128) NOT NULL,
   Vek int,
   Programovaci_jazyk NVARCHAR2(512),
@@ -77,7 +77,7 @@ CREATE TABLE Uzivatel (
 );
 
 CREATE TABLE Bezny_uzivatel (
-  Nickname NVARCHAR2(64) NOT NULL REFERENCES Uzivatel(Nickname),
+  Nickname NVARCHAR2(64) NOT NULL REFERENCES Uzivatel(Nickname) ON DELETE CASCADE,
   Odmena INT,
   Karma INT,
   
@@ -85,7 +85,7 @@ CREATE TABLE Bezny_uzivatel (
 );
 
 CREATE TABLE Programator (
-  Nickname NVARCHAR2(64) NOT NULL REFERENCES Uzivatel(Nickname),
+  Nickname NVARCHAR2(64) NOT NULL REFERENCES Uzivatel(Nickname) ON DELETE CASCADE,
   Produkt NVARCHAR2(64),
   Rank INT,
   
@@ -107,7 +107,7 @@ CREATE TABLE Charakterizuje (
 );
 
 CREATE TABLE Zranitelnost(
-  ID_vulnerablity INT UNIQUE NOT NULL,
+  ID_vulnerablity INT  NOT NULL REFERENCES Bug(ID_bug) ON DELETE CASCADE,
   Miera_nebezpecenstva NVARCHAR2(64),
   Moznost_zneuzitia NVARCHAR2(64),
   
@@ -115,7 +115,8 @@ CREATE TABLE Zranitelnost(
 );
 
 /*ALTER TABLE Klient ADD CONSTRAINT PK_klient PRIMARY KEY (r_cislo);
-ALTER TABLE Ucet ADD CONSTRAINT FK_ucet_rcislo FOREIGN KEY (r_cislo) 
+ALTER TABLE Ucet ADD CONSTRAINT FK_ucet_rcislo FOREIGN KEY (r_cislo) 
+
    REFERENCES Klient ON DELETE CASCADE;
 */
 
