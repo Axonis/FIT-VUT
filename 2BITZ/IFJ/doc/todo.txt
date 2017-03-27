@@ -1,0 +1,52 @@
+[29/11/2016]
+Roman:	1. local variable definition mustn't have the same name as
+		any function in the same class
+	2. verify ifj16.print expression to contain at least one String
+	3. static inicializations -> detect uninitialized vars in 2nd round
+
+[11/11/2016/
+TODO:
+	parser: fix bugs, correctly handle declarations, set up the cooperation with the table of symbols (TOS)
+
+	semantic analysis implementation
+
+-------------------------------------------
+  PERMANENT ASSIGMENTS
+-------------------------------------------
+Adam: parser,
+
+Roman:
+	DONE basic parser
+	TODO fix all bugs, make sure implementation fits the grammar
+
+Kiko: algoritmy, testy, 
+
+Jozi: doc, stack, testy,
+
+Adio: interpret, stack, makefile, 
+
+-------------------------------------------
+  THINGS TO DO WITHOUT ASSIGNMENT
+-------------------------------------------
+- DONE: dynamic-string(type) = a dynamically-changing linked list for holding really long strings
+                  - needed for scanner (identifiers)
+
+// Tabulka symbolov - dvojica symbol:data
+
+symbol =>   "trieda.premenna"
+symbol =>   "trieda.funkcia"
+
+symbol =>   "trieda.funkcia.argumentA"
+symbol =>   "trieda.funkcia.argumentB"
+
+struct struct stable_data {
+    char *key;          // symbol
+    data_t data;        // data
+}
+
+// Data symbolu
+typedef struct {
+    int type;                   // premenna:    int, double, String alebo funkcia: f-int, f-double,f-String, f-void
+    stable_data *ptr;           // funkcia:
+    int inter_table;
+}data_t;

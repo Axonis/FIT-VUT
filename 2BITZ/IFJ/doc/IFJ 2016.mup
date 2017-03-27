@@ -1,0 +1,29 @@
+{
+  "title": "IFJ 2016",
+  "id": 1,
+  "formatVersion": 2,
+  "ideas": {
+    "1": {
+      "title": "Parser",
+      "id": 2,
+      "ideas": {
+        "1": {
+          "title": "Precedencni tabulka",
+          "id": 4
+        },
+        "2": {
+          "title": "Rekurzivni sestup",
+          "id": 5
+        }
+      },
+      "attr": {
+        "position": [
+          100,
+          -140.5,
+          1
+        ],
+        "style": {}
+      }
+    }
+  }
+}

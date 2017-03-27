@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0120)https://wis.fit.vutbr.cz/FIT/st/course-sf.php?file=%2Fci%2F11486%2F59284%2Fxurban66%2Fitu-ajax.html&cid=11486&item=59284 -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title> ITU ajax </title>
+  
+  <style type="text/css">
+  div, input { margin: 10px; }
+  </style>
+</head>
+<body>
+
+<div id="chatArea" style="height: 300px; border: solid #aaa 1px; overflow:auto;"></div> 
+
+<form onsubmit="return uploadData()">
+  <input type="text" id="newMessageString">
+  <input type="submit" value="send">
+</form>
+
+<div id="status" style="border: solid #aaa 1px; ">&nbsp;</div> 
+
+
+<script type="text/javascript">
+
+var lastID = 0;
+
+/***
+  * XMLHttpRequest object constructor (for compatibility with various browsers)
+  */
+
+function createXmlHttpRequestObject() {
+  var xmlhttp;
+  try {
+    xmlHttp = new XMLHttpRequest(); //should work on all browsers except IE6 or older
+  } catch (e) { 
+    try {
+      xmlHttp = new ActiveXObject("Microsoft.XMLHttp"); //browser is IE6 or older
+    } catch (e) {
+      // ignore error
+    }
+  }
+  if (!xmlHttp) {
+    alert ("Error creating the XMLHttpRequest object.");
+  } else {
+    return xmlHttp;
+  }
+}
+
+function uploadData() {
+  
+  var url = "http://www.stud.fit.vutbr.cz/~xmlich02/itu-ajax/api.php"; //server
+  
+  try {
+    var xmlHttp = createXmlHttpRequestObject();//stores XMLHttpRequestObject
+
+    //// put your code here
+    var txt = document.getElementById("newMessageString").value;
+    var processParams = "data=" + txt;
+    
+    xmlHttp.open("POST", url , true);
+    xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;");
+     
+    xmlHttp.onreadystatechange = function() {
+      if(xmlHttp.readyState==4){
+      downloadData();
+      }
+      
+    }
+    
+    xmlHttp.send(processParams);
+  } catch (e) {
+    alert(e.toString());
+  }
+
+  return false; // to avoid default form submit behavior 
+}
+
+function downloadData() {
+  
+  var xmlHttp = createXmlHttpRequestObject()
+  var url = "http://www.stud.fit.vutbr.cz/~xmlich02/itu-ajax/api.php";
+  
+  xmlHttp.onreadystatechange = function() {
+
+    if ((xmlHttp.readyState==4) && (xmlHttp.status==200)) {
+      var msgs = JSON.parse(xmlHttp.responseText);
+      var chatArea = document.getElementById("chatArea");
+     
+      
+      var newIds = "New IDs: "; 
+      msgs.forEach(function (msg) {
+        if(msg.id > lastID){
+          chatArea.innerHTML += msg.login + ": " + msg.dts + " " + msg.cnt + "<br>";
+          lastID = msg.id;
+          newIds += msg.id + " "; 
+        }
+        chatArea.scrollTop = chatArea.scrollHeight;
+        document.getElementById("status").innerHTML = newIds;
+      });  
+    }
+  }
+  xmlHttp.open("GET", url, true);
+  xmlHttp.send(null); 
+}
+
+downloadData();
+setInterval("downloadData()",3000);
+</script>
+
+</body></html>

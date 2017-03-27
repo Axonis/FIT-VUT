@@ -1,0 +1,88 @@
+/******************************************************************************
+// This grammar has been verified using Java applet. There is ONE collision
+// in <assign-statement>, which is not LL1 and it's covered in our parser in 
+// the way how it was proposed by Mr. Krivka.
+// Ifj16.print is also hacked without being specified explicitly here.
+//							*Roman
+/******************************************************************************
+
+//UPDATE: 3/12/2016 - another collision in LL1 in IF-ELSE, solved as proposed by authors of IFJ16 (page)
+
+<source-program>              -> <class-definition-list>
+
+<class-definition-list>       -> <class-definition> <class-definition-list>
+<class-definition-list>       -> epsilon
+
+<class-definition>            -> class simple-identifier { <class-body> }
+
+<class-body>                  -> epsilon
+<class-body>                  -> static <definition> <class-body> 
+
+<definition>                  -> <type-specifier> simple-identifier <more-definition>
+<definition>                  -> void simple-identifier <function-definition>
+<more-definition>             -> <function-definition>
+<more-definition>             -> ;
+<more-definition>             -> = <expr> ;
+
+<function-definition>         -> ( <function-parameters-list> ) { <function-body> }
+
+<function-body>               -> <statement> <function-body>
+<function-body>               -> <local-definition> <function-body>
+<function-body>               -> epsilon 
+
+<local-definition>            -> <type-specifier> simple-identifier <variable-initialization> ;
+<variable-initialization>     -> = <more-next>
+<variable-initialization>     -> epsilon
+
+<parameter-definition>        -> <type-specifier> simple-identifier
+<function-parameters-list>     -> <parameter-definition> <more-function-parameters>
+<function-parameters-list>     -> epsilon
+<more-function-parameters>     -> , <parameter-definition> <more-function-parameters> 
+<more-function-parameters>     -> epsilon
+
+<argument-definition>         -> <term>
+<function-arguments-list>     -> <argument-definition> <more-function-arguments>
+<function-arguments-list>     -> epsilon
+<more-function-arguments>     -> , <argument-definition> <more-function-arguments> 
+<more-function-arguments>     -> epsilon
+
+<statement>                    -> <compound-statement>
+<statement>                   -> <assign-statement>
+<statement>                   -> <selection-statement>
+<statement>                    -> <iteration-statement>
+<statement>                    -> <jump-statement>
+
+<block-items-list>             -> <statement> <block-items-list>
+<block-items-list>             -> epsilon
+
+<compound-statement>           -> { <block-items-list> }
+<assign-statement>             -> <identifier> <next> ;
+<selection-statement>          -> if ( <expr> ) <statement> <selection-else>
+<selection-else>               -> else <statement>
+<selection-else>               -> epsilon
+
+<iteration-statement>          -> while ( <expr> ) <statement>
+<jump-statement>               -> return <expr> ;
+
+<next>                         -> ( <function-arguments-list> ) 
+<next>                         -> = <more-next>
+
+<more-next>                    -> <identifier> ( <function-arguments-list> ) 
+<more-next>                    -> <expr>
+
+/*	Types	*/
+
+
+<identifier>                   -> simple-identifier
+<identifier>                   -> fully-qualified-identifier
+
+<term>                   -> simple-identifier
+<term>                   -> fully-qualified-identifier
+<term>                   -> decimal-constant
+<term>                   -> floating-point-constant
+
+<type-specifier>               -> double
+<type-specifier>               -> int
+<type-specifier>               -> String
+
+<expr>                         -> expression

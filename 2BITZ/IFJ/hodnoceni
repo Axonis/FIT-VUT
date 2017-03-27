@@ -1,0 +1,13 @@
+Percentuální hodnocení modulů interpretu: 
+Lexikální analýza (detekce chyb): 100% (240/240)
+Syntaktická analýza (detekce chyb): 100% (247/247)
+Sémantická analýza (detekce chyb): 92% (301/326)
+Interpretační chyby (detekce): 89% (177/197)
+Interpretace: 99% (983/991)
+CYCLES 0% (0/150)
+UNARY 0% (0/100)
+BASE 0% (0/50)
+FUNEXP 0% (0/100)
+BOOLOP 0% (0/100)
+SIMPLE 100% (100/100)
+Celkem bez rozšíření: 97% (1948/2001)
