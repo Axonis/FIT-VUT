@@ -1,0 +1,99 @@
+\documentclass[12pt, a4paper, czech]{article}
+\usepackage[left=2cm,text={17cm, 24cm}, top=3cm]{geometry}
+\usepackage[IL2]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+\DeclareUrlCommand\url{\def\UrlLeft{<}\def\UrlRight{>} \urlstyle{tt}}
+
+
+\begin{document}
+	%%-----------------Title------------------------------------------
+	\begin{center}
+		\Huge
+		\textsc{\Huge{Vysoké učení technické v~Brně}\\
+			\huge{Fakulta informačních technologií}}\\
+		\vspace{\stretch{0.382}}
+		\Large{Typografie a publikování - 4. projekt}\\
+		\Huge{Citace}\vspace{\stretch{0.618}}
+	\end{center}
+	\thispagestyle{empty}
+	\normalsize{\today \hfill Jozef Urbanovský}
+	\newpage
+	
+	\pagenumbering{arabic}
+	\setcounter{page}{1}
+	
+	\section{Typografia}
+	Slovo typografia je odvodené od slov \textit{type} a \textit{graph}, prenesene grafika textu.
+	Pre naše účely zjednodušene tieto základy typografie znamenajú súhrn pravidiel, ktoré 
+	podporujú zrozumiteľnosť a čitateľnosť textu. \cite{typo}	
+	Typografia je v slovníkov vysvetľovaná ako kníhtlač, odbor, ktorý zahŕňa sadzbu, 
+	tlač, výtvarné a technické riešenie dokumentu. 
+	V dnešnej dobe je bežné realizovať typografiu a jej odvetvia
+	na osobných počítačoch, za pomoci typografických systémov známych ako 
+	DTP systémy. \cite{cerny} \par
+	
+	 
+	Článkov o typografii môžeme nájsť na internete nespočtne mnoho, ale nemožno sa však
+	pri výzkume opierať o cudzojazyčné zdroje, nakoľko každý jazyk má svoje typografické 
+	zákonitosti. Pri zameraní sa len na české premene venujúce typografii, zistíme, že kvantita 
+	prevyšuje kvalitu.  \cite{fiala} 
+	\par
+	
+	\LaTeX\ je rozsiahla zbierka značkovacích príkazov používaných silným sádzacím 
+	nástrojom \TeX, ktorý sa používa na širokú škálu dokumentov od vedeckých článkov 
+	až po komplexné knihy. \cite{kopka} 
+	\TeX (vyslovuje sa „tech“) je počítačový typografický systém, ktorý začal v roku 1977 vyvíjať
+	americký informatik Donald Knuth. Hlavným Knuthovým impulzom pre tento počin bola predovšetkým
+	zhoršujúca sa typografická kvalita postupne vydávaných častí jeho knihy \textit{The Art of
+	Computer Programming} v kombinácii s potenciálom, ktorý videl v 
+	počítačovej typografii. \cite{kosto} 
+	Základný princíp \LaTeX u spočíva v tom, že autor by nemal byť neustále obťažovaný formátovaním.
+	Napríklad, ak píše nadpis sekcie nemusí sa starať o tom, aby bol text zvýraznený, 
+	ale stačí špecifikovať, že sa jedná o nadpis. Jeho štýl si stačí raz definovať 
+	ako bude vyzerať v cieľovom dokumente a je tak možné zachovať konzistenciu.\cite{kottw}
+	\LaTeX\ nemá konkurenciu v prípadne písania rozsiahlych textov, približne od 50 strán, 
+	prípadne aj menej ak sa jedná o text obsahujúci množstvo vzorcov, tabuliek a obrázkov. 
+	Je štandardom v drvivej väčšine odborných nakladateľstiev ako napríklad Elsevier, 
+	Cambridge University Press, AIP a iné. \cite{groger} 
+	\par
+	
+	Jadro systému tvorí prekladač jazyka \TeX\ spoločne s nadstavbou \LaTeX, ktorého výstupom
+	je textový súbor, do ktorého sa zapisuje cieľový text spolu s príkazmi, ktoré určujú
+	ako má byť text vysádzaný. Výstupom prekladača je súbor s vysádzaným textom, ktorý 
+	je vo formáte nezávislom na zariadení - \texttt{*.dvi}. \cite{rybic}
+	\par	
+
+	Väčšina bežných textov je členená do hierarchickej štruktúry kapitol, kapitoliek a iných 
+	menších častí. Bývajú očíslované a nadpisy zhodnej úrovne vyzerajú identicky. 
+	\LaTeX\ má pre tento účel sadu príkazov, ako napríklad 
+	\textit{\textbackslash chapter, \textbackslash section} a iné. \cite{satra} 
+	\par
+	
+	Na záver je dobré pripomenúť, aká prínosná pre vás môže byť typografia, ako dokazuje článok \cite{wong}, ktorý poukazuje na výber správneho štýlu písma pri zasielaní žiadosti o prácu.
+	
+	
+	
+	
+	
+
+	
+	
+	
+	
+		
+	
+
+	
+
+	
+	
+	\newpage
+	\bibliographystyle{czplain}
+	\renewcommand{\refname}{Literatúra}
+	\bibliography{liter}
+	
+\end{document}		
