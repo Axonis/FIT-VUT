@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Solitaire" default="compile" basedir=".">
+    <property name="src.dir" location="./src" />
+    <property name="lib.dir" location="./lib" />
+    <property name="build.dir" location="./build" />
+    <property name="out.dir" location="./out" />
+
+    <path id="build.classpath">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar" />
+        </fileset>
+    </path>
+
+    <target name="clean">
+        <delete dir="${build.dir}" />
+        <delete dir="${out.dir}" />
+    </target>
+
+    <target name="makedir">
+        <mkdir dir="${build.dir}" />
+    </target>
+
+    <target name="compile" depends="clean, makedir">
+        <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="build.classpath" />
+    </target>
+
+    <target name="run">
+        <junit printsummary="on" haltonfailure="yes" fork="true">
+            <classpath>
+                <path refid="build.classpath"/>
+                <pathelement location="${build.dir}"/>
+            </classpath>
+            <formatter type="brief" usefile="false" />
+            <batchtest>
+                <fileset dir="${src.dir}" includes="**/*Test.java" />
+            </batchtest>
+        </junit>
+    </target>
+</project>
