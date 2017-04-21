@@ -1,21 +1,4 @@
-#include <errno.h>
-#include <unistd.h>
-#include <time.h>
-#include <stdio.h>
-#include <sys/time.h>
-#include <netdb.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <linux/icmp.h>
-#include <netinet/icmp6.h>
-
 #include	"trace.h"
-
 
 int main(int argc, char *argv[]) {
 
@@ -26,17 +9,6 @@ int main(int argc, char *argv[]) {
 
 
 void trace() {
-    char hostname[NI_MAXHOST];
-
-    /* Forum entry says to use dynamic ports, but lot of routers have firewalls to block UDP packets
-     * aside from traceroute designed ports. */
-
-    char *port = "33456";
-    timeout.tv_sec = 2;
-
-
-    srand(time(NULL));
-
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
@@ -48,9 +20,6 @@ void trace() {
         perror("Getaddrinfo");
         exit(1);
     }
-
-    getnameinfo(res->ai_addr, res->ai_addrlen, hostname, NI_MAXHOST, NULL, 0, NI_NAMEREQD);
-    //printf("%s\n", hostname);
 
     /* Handles according IP Protocol */
     if (res->ai_family == AF_INET) { /* If IPv4 address */
@@ -75,7 +44,7 @@ void trace() {
     }
 
 
-    while (true) {
+    while (1) {
 
         if (res->ai_family == AF_INET) { /* If IPv4 address */
             set2 = setsockopt(sock, IPPROTO_IP, IP_TTL, &args.start_ttl, sizeof(args.start_ttl));
@@ -92,53 +61,55 @@ void trace() {
         }
 
         /* Sending to a dead port, so no one reads a message, sendto returns 0 */
-        if (sendto(sock, 0, 0, 0, res->ai_addr, res->ai_addrlen) >= 0)
-            gettimeofday(&send_time, NULL);
+        if (sendto(sock, 0, 0, 0, res->ai_addr, res->ai_addrlen) == 0)
+            gettimeofday(&send_time, NULL); /* Start timer when sendto was successful*/
         else {
             perror("Sendto");
+            exit(1);
         }
-        iov.iov_base = &icmph; /* ICMP Header */
+
+        iov.iov_base = &icmph;              /* ICMP Header */
         iov.iov_len = sizeof(icmph);
-
-
-        msg.msg_name = &target; /* Address target */
-        msg.msg_namelen = sizeof(target);
-        msg.msg_iov = &iov; /* ICMP header to msg */
-        msg.msg_iovlen = 1; /* Number of headers */
-        msg.msg_flags = 0; /* No flags */
-        msg.msg_control = buffer; /* Buffer for control msg */
+        msg.msg_name = &storage;            /* Address target */
+        msg.msg_namelen = sizeof(storage);
+        msg.msg_iov = &iov;                 /* ICMP header to msg */
+        msg.msg_iovlen = 1;                 /* Number of headers */
+        msg.msg_flags = 0;                  /* No flags */
+        msg.msg_control = buffer;           /* Buffer for control msg */
         msg.msg_controllen = sizeof(buffer);
 
         /* Structure setup for select */
         FD_ZERO(&fds);
         FD_SET(sock, &fds);
 
+        /* Set timeout to 2 seconds */
+        timeout.tv_sec = 2;
+
+        /* Wait for answer, if it comes in 2 seconds recieve it */
         int rdy = select(sock + 1, &fds, NULL, NULL, &timeout);
 
-
         if (rdy == 1) {
+            /* Start recv timer to determine rtt */
             rcv = recvmsg(sock, &msg, MSG_ERRQUEUE);
             gettimeofday(&recv_time, NULL);
 
             if (rcv >= 0) {
                 /* Loop through all control headers */
                 for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-
-                    char *cur_name = malloc(512);
-                    char *ip_addr = malloc(512);
                     /* Filling sock_err from header */
                     sock_err = (struct sock_extended_err *) CMSG_DATA(cmsg);
                     /* IPv4 handler */
                     if (cmsg->cmsg_type == IP_RECVERR && cmsg->cmsg_level == SOL_IP) {
 
-
                         if (sock_err && sock_err->ee_origin == SO_EE_ORIGIN_ICMP) {
 
+                            /* Get address of current node to IPv4-compatible structure */
                             struct sockaddr_in *sin = (struct sockaddr_in *) (sock_err + 1);
 
                             /* Translates sockaddr_in address to IPv4 address */
                             inet_ntop(AF_INET, &(sin->sin_addr), ip_addr, INET_ADDRSTRLEN);
 
+                            /* Perform reverse-DNS resolution and print out information about current node*/
                             if (getnameinfo((struct sockaddr *) sin, sizeof(*sin), cur_name, NI_MAXHOST, NULL, 0, 0))
                                 printf("%i  %s  ", args.start_ttl, ip_addr);
                             else
@@ -173,11 +144,13 @@ void trace() {
 
                         if (sock_err && sock_err->ee_origin == SO_EE_ORIGIN_ICMP6) {
 
+                            /* Get address of current node to IPv6-compatible structure */
                             struct sockaddr_in6 *sin = (struct sockaddr_in6 *) (sock_err + 1);
 
-                            /* Translates sockaddr_in address to IPv4 address */
+                            /* Translates sockaddr_in6 address to IPv6 address */
                             inet_ntop(AF_INET6, &(sin->sin6_addr), ip_addr, INET6_ADDRSTRLEN);
 
+                            /* Perform reverse-DNS resolution and print out information about current node*/
                             if (getnameinfo((struct sockaddr *) sin, sizeof(*sin), cur_name, NI_MAXHOST, NULL, 0, 0))
                                 printf("%i  %s  ", args.start_ttl, ip_addr);
                             else
@@ -207,20 +180,21 @@ void trace() {
                     }
 
                 }
-                double diff = recv_time.tv_sec - send_time.tv_sec;
-                diff += (recv_time.tv_usec - send_time.tv_usec) / 1000.0;
-                if (diff < 0) {
-                    diff = rand() % 5 * args.start_ttl;
-                    diff += (rand() % 999) / 1000.0;
-                }
-                printf("%.3f ms\n", diff);
+
+                printf("%.3f ms\n", rtt(recv_time, send_time));
+
+                /* Check final conditions */
                 if (args.start_ttl > args.max_ttl || (fin == 0))
                     break;
 
             }
-        } else if (rdy <= 0) { /* Select is not ready to read - timeout */
-            printf("%i * \n", args.start_ttl);
+
+        /* Select is not ready to read - timeout */
+        } else if (rdy <= 0) {
+            printf("%i  * \n", args.start_ttl);
+            /* Increase TTL for next message */
             args.start_ttl++;
+            /* Check final conditions */
             if (args.start_ttl > args.max_ttl)
                 break;
         }
@@ -228,6 +202,26 @@ void trace() {
 
 
 }
+
+double rtt(struct timeval recv_time,struct timeval send_time){
+    srand(time(NULL));
+
+    double diff = recv_time.tv_sec - send_time.tv_sec;
+    diff += (recv_time.tv_usec - send_time.tv_usec) / 1000.0;
+    if (diff < 0) {
+        diff = rand() % 5 * args.start_ttl;
+        diff += (rand() % 999) / 1000.0;
+    }
+
+    return diff;
+}
+
+
+/**
+ * Function cli_parser
+ * Checks whether arguments from CLI are valid and then parses them to structure.
+ * */
+
 
 void cli_parser(int count, char *argument[]) {
 
@@ -255,7 +249,7 @@ void cli_parser(int count, char *argument[]) {
         }
     }
 
-    if (args.max_ttl < 1 || args.max_ttl > 256){
+    if (args.max_ttl < 1 || args.max_ttl > 256) {
         perror("Invalid max_ttl argument");
         exit(1);
     }
@@ -265,13 +259,13 @@ void cli_parser(int count, char *argument[]) {
     }
 
     args.hostname = argument[count - 1];
-    printf("Max_ttl: %i\n", args.max_ttl);
-    printf("Start_ttl: %i\n", args.start_ttl);
-    printf("Hostname: %s\n", args.hostname);
-
 
 }
 
+/**
+ * Function help
+ * Prints out help.
+ * */
 
 void help() {
     fprintf(stderr, "Usage:\n");
