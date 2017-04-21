@@ -1,0 +1,70 @@
+.Dd 21/4/17       
+.Dt Trace 1
+.Os xurban66
+.Sh NAME
+.Pp         
+.Nm trace
+.Nd print the route packets trace to network host
+.Sh SYNOPSIS
+.Pp
+.Nm
+.Op Fl f Ar first_ttl        
+.Op Fl m Ar max_ttl              
+.Ar <host>
+.Sh DESCRIPTION
+.Pp
+.Nm
+tracks the route packets taken from an IP network on their way to a given host.
+It utilizes the IPv4 protocol's time to live (TTL) or IPv6 protocol's hop limit(HL) and 
+attempts to elicit an 
+ICMP TIME_EXCEEDED or ICMP6_TIME_EXCEEDED response from 
+each gateway along the path to the host
+.Pp
+The only required parameter is the name or IP address of the destination host. 
+.Nm
+tries to track the route an IP pack would follow to some internet 
+host by sending empty packets with a small TTL/HL and then waiting for
+a response containing ICMP_TIME_EXCEEDED/ICMP6_TIME_EXCEEDED. This program starts
+with default TTL/HL 1 and increases it until it recieves ICMP_DEST_UNREACH/ICMP6_DST_UNREACH.
+.Pp
+If
+.Nm 
+recives one of these constants, it tries to figure out whether it reached 
+desired host or problem occured. Tracing a route stops only upon recieving these 
+constants in response or hit a max number of hops.
+.Pp
+If the probe answers come from different gateways, IPv4/IPv6 address, hostname 
+if resolved and response time will be printed. 
+If there is no reponse within a 2 seconds, a "*" (star) is printed for that probe,
+signalizing it timed out. 
+Whether probe comes or not, system prints out number of hop at the start of line. 
+.Pp
+Each probe can contain additional information that can be printed: H!, N! or P! 
+(host, network or protocol unreachable), X! (communication administratively prohibited).
+.Pp
+This program is also able to resolve hostname and transfer it to IPv4/IPv6 address 
+and vice versa. 
+.Nm
+uses port from traceroute dedicated ports, since they are mostly not being blocked 
+by firewalls that would tag them as "unlikely" UDP ports. 
+.Sh OPTIONS
+.Pp
+.Fl f
+.TP
+.Ar first_ttl
+.Pp
+\t
+\t
+\t Specifies with what TTL to start. Defaults to 1.
+.Pp
+.Fl m
+.Ar max_ttl
+.Pp
+\t
+\t
+\t Specifies the maximum number of hops (max time-to-live value for IPv4 and hop limit for IPv6) trace will probe. The default is 30.           
+.Sh BUGS
+.Pp      
+This program checks only whether recieved flag is H!, N!, P! or X! (specified
+by project description), when other flag arrives, it ends printing out response time.
+
