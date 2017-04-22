@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <linux/icmp.h>
 #include <netinet/icmp6.h>
 

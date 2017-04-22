@@ -4,7 +4,6 @@ int main(int argc, char *argv[]) {
 
     cli_parser(argc, argv);
     trace();
-    return 1;
 
 }
 
@@ -104,14 +103,17 @@ void trace() {
 
                         if (sock_err && sock_err->ee_origin == SO_EE_ORIGIN_ICMP) {
 
-                            /* Get address of current node to IPv4-compatible structure */
-                            struct sockaddr_in *sin = (struct sockaddr_in *) (sock_err + 1);
+                            /* Get address of current node to compatible structure */
+                            struct sockaddr *sin = (struct sockaddr *) (sock_err + 1);
 
                             /* Translates sockaddr_in address to IPv4 address */
-                            inet_ntop(AF_INET, &(sin->sin_addr), ip_addr, INET_ADDRSTRLEN);
+                            if (getnameinfo(sin,sizeof(*sin),ip_addr,sizeof(ip_addr), 0, 0, NI_NUMERICHOST)){
+                                perror("Getnameinfo");
+                                exit(1);
+                            }
 
                             /* Perform reverse-DNS resolution and print out information about current node*/
-                            if (getnameinfo((struct sockaddr *) sin, sizeof(*sin), cur_name, NI_MAXHOST, NULL, 0, 0))
+                            if (getnameinfo(sin, sizeof(*sin), cur_name, NI_MAXHOST, NULL, 0, 0))
                                 printf("%i  %s  ", args.start_ttl, ip_addr);
                             else
                                 printf("%i  %s (%s)  ", args.start_ttl, cur_name, ip_addr);
@@ -148,8 +150,12 @@ void trace() {
                             /* Get address of current node to IPv6-compatible structure */
                             struct sockaddr_in6 *sin = (struct sockaddr_in6 *) (sock_err + 1);
 
+
                             /* Translates sockaddr_in6 address to IPv6 address */
-                            inet_ntop(AF_INET6, &(sin->sin6_addr), ip_addr, INET6_ADDRSTRLEN);
+                            if (getnameinfo((struct sockaddr *)sin,sizeof(*sin),ip_addr,sizeof(ip_addr), 0, 0, NI_NUMERICHOST)){
+                                perror("Getnameinfo");
+                                exit(1);
+                            }
 
                             /* Perform reverse-DNS resolution and print out information about current node*/
                             if (getnameinfo((struct sockaddr *) sin, sizeof(*sin), cur_name, NI_MAXHOST, NULL, 0, 0))
@@ -260,6 +266,10 @@ void cli_parser(int count, char *argument[]) {
     }
 
     args.hostname = argument[count - 1];
+    printf("Max_ttl: %i\n", args.max_ttl);
+    printf("Start_ttl: %i\n", args.start_ttl);
+    printf("Hostname: %s\n", args.hostname);
+
 
 }
 
