@@ -5,6 +5,8 @@ int main(int argc, char *argv[]) {
     cli_parser(argc, argv);
     trace();
 
+    return 0;
+
 }
 
 
@@ -211,13 +213,12 @@ void trace() {
 }
 
 double rtt(struct timeval recv_time,struct timeval send_time){
-    srand(time(NULL));
 
-    double diff = recv_time.tv_sec - send_time.tv_sec;
+    int sec = (int)(recv_time.tv_sec - send_time.tv_sec);
+    double diff = 0.0;
     diff += (recv_time.tv_usec - send_time.tv_usec) / 1000.0;
-    if (diff < 0) {
-        diff = rand() % 5 * args.start_ttl;
-        diff += (rand() % 999) / 1000.0;
+    if (sec == 1) {
+        diff += 1000;
     }
 
     return diff;
@@ -266,10 +267,6 @@ void cli_parser(int count, char *argument[]) {
     }
 
     args.hostname = argument[count - 1];
-    printf("Max_ttl: %i\n", args.max_ttl);
-    printf("Start_ttl: %i\n", args.start_ttl);
-    printf("Hostname: %s\n", args.hostname);
-
 
 }
 
