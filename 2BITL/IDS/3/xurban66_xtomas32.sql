@@ -103,7 +103,7 @@ CREATE TABLE Ovlada (
   Nickname NVARCHAR2(64) NOT NULL,
   Nazov_jazyka NVARCHAR2(64) NOT NULL,
   
-  Skusenost NVARCHAR2(64),
+  Skusenost NVARCHAR2(64),/*Beginner, Advanced, Expert*/
   
   PRIMARY KEY (Nickname,Nazov_jazyka)
 );
@@ -172,11 +172,20 @@ INSERT INTO Bezny_uzivatel (Nickname, Odmena, Karma) VALUES('Cyborg13', null, nu
 INSERT INTO Bezny_uzivatel (Nickname, Odmena, Karma) VALUES('Destroyer-ultimate', '10000', '1000');
 INSERT INTO Bezny_uzivatel (Nickname, Odmena, Karma) VALUES('Whysoserious', '56464', '56');
 
-INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny) VALUES('1', '1,25', '21-12-2016', 'NovaZilina');
-INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny) VALUES('2', '2,83', '24-03-2017', 'MirrorMaster12');
-INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny) VALUES('3', '1,14', '17-02-2017', 'xxKebabmajsterxx');
-INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny) VALUES('4', '3,84', '16-11-2015', 'AndreDankojeLegenda');
-INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny) VALUES('5', '0,12', '14-01-2016', 'xxKebabmajsterxx');
+INSERT INTO Programovaci_jazyk (Nazov_jazyka) VALUES ('C');
+INSERT INTO Programovaci_jazyk (Nazov_jazyka) VALUES ('D');
+INSERT INTO Programovaci_jazyk (Nazov_jazyka) VALUES ('GO');
+INSERT INTO Programovaci_jazyk (Nazov_jazyka) VALUES ('C++');
+INSERT INTO Programovaci_jazyk (Nazov_jazyka) VALUES ('C#');
+INSERT INTO Programovaci_jazyk (Nazov_jazyka) VALUES ('Java');
+INSERT INTO Programovaci_jazyk (Nazov_jazyka) VALUES ('JavaScript');
+INSERT INTO Programovaci_jazyk (Nazov_jazyka) VALUES ('Python');
+
+INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Programovaci_jazyk) VALUES('1', '1,25', '21-12-2016', 'NovaZilina', 'Java');
+INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Programovaci_jazyk) VALUES('2', '2,83', '24-03-2017', 'MirrorMaster12', 'C');
+INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Programovaci_jazyk) VALUES('3', '1,14', '17-02-2017', 'xxKebabmajsterxx', 'GO');
+INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Programovaci_jazyk) VALUES('4', '3,84', '16-11-2015', 'AndreDankojeLegenda', 'Python');
+INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Programovaci_jazyk) VALUES('5', '0,12', '14-01-2016', 'xxKebabmajsterxx', 'C++');
 
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170217', '0', '03-12-2017', '', 'xxKebabmajsterxx');
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170219', '1', '07-11-2017', '05-12-2017', 'Ahojakosamas');
@@ -217,18 +226,20 @@ INSERT INTO Test (ID_test, Datum_zaciatku, Datum_konca, Hodnotenie, ID_patch, Ni
 INSERT INTO Test (ID_test, Datum_zaciatku, Datum_konca, Hodnotenie, ID_patch, Nickname_schvaleny) VALUES('20170216', '07-01-2017', '07-05-2017', '100,0', '20170216', null);
 INSERT INTO Test (ID_test, Datum_zaciatku, Datum_konca, Hodnotenie, ID_patch, Nickname_schvaleny) VALUES('20170217', '13-03-2017', '13-03-2018', '9,6', '20170212', 'Ahojakosamas');
 
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('Destroyer-ultimate' , 'Java', 'Beginner');
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('Destroyer-ultimate' , 'C++', 'Advanced');
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('Whysoserious' , 'C', 'Expert');
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('Whysoserious' , 'GO', 'Advanced');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('AndreDankojeLegenda' , 'Java', 'Beginner');
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('AndreDankojeLegenda' , 'Python', 'Advanced');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('Ahojakosamas', 'D', 'Advanced')
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('MirrorMaster12', 'C', 'Advanced');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('MirrorMaster12', 'C++', 'Advanced');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('MirrorMaster12', 'D', 'Advanced');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('NovaZilina', 'D', 'Beginner');
-INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('NovaZilina', 'Java', 'Advanced');
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('NovaZilina', 'Java', 'Expert');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx', 'C++', 'Expert');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx', 'GO', 'Beginner');
-
-
-
 
 /*2 JOIN - Mena programatorov s rankom vyssim ako 5, ktori schvalili testy s hodnotenim nizsim ako 90*/
 SELECT Test.Nickname_schvaleny FROM Test JOIN Programator ON Test.Nickname_schvaleny = Programator.Nickname WHERE Test.Hodnotenie <= 90 AND Programator.Rank > 5;
