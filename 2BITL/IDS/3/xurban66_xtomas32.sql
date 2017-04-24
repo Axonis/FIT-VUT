@@ -1,14 +1,15 @@
-DROP TABLE Bug      CASCADE CONSTRAINTS;
-DROP TABLE Modul    CASCADE CONSTRAINTS;
-DROP TABLE Uzivatel CASCADE CONSTRAINTS;
-DROP TABLE Ticket   CASCADE CONSTRAINTS;
-DROP TABLE Patch    CASCADE CONSTRAINTS;
-DROP TABLE Test     CASCADE CONSTRAINTS;
-DROP TABLE Charakterizuje   CASCADE CONSTRAINTS;
-DROP TABLE Zranitelnost     CASCADE CONSTRAINTS;
-DROP TABLE Programator      CASCADE CONSTRAINTS;
-DROP TABLE Bezny_uzivatel   CASCADE CONSTRAINTS;
-
+DROP TABLE Bug      			CASCADE CONSTRAINTS;
+DROP TABLE Modul    			CASCADE CONSTRAINTS;
+DROP TABLE Uzivatel 			CASCADE CONSTRAINTS;
+DROP TABLE Ticket   			CASCADE CONSTRAINTS;
+DROP TABLE Patch    			CASCADE CONSTRAINTS;
+DROP TABLE Test     			CASCADE CONSTRAINTS;
+DROP TABLE Charakterizuje   	CASCADE CONSTRAINTS;
+DROP TABLE Zranitelnost     	CASCADE CONSTRAINTS;
+DROP TABLE Programator      	CASCADE CONSTRAINTS;
+DROP TABLE Bezny_uzivatel   	CASCADE CONSTRAINTS;
+DROP TABLE Programovaci_jazyk 	CASCADE CONSTRAINTS;
+DROP TABLE Ovlada             CASCADE CONSTRAINTS;
 
 
 
@@ -16,6 +17,7 @@ CREATE TABLE Modul (
   ID_modul int NOT NULL,
   chybovost float DEFAULT NULL,
   datum_poslednej_upravy date DEFAULT NULL,
+  Nazov_jazyka NVARCHAR2(64),
   
   Nickname_zodpovedny NVARCHAR2(64),
   
@@ -71,7 +73,6 @@ CREATE TABLE Uzivatel (
   Nickname NVARCHAR2(64) NOT NULL,
   Meno NVARCHAR2(128) NOT NULL,
   Vek int,
-  Programovaci_jazyk NVARCHAR2(512),
 
   PRIMARY KEY (Nickname)
 );
@@ -92,6 +93,20 @@ CREATE TABLE Programator (
   PRIMARY KEY (Nickname) 
 );
 
+CREATE TABLE Programovaci_jazyk (
+  Nazov_jazyka NVARCHAR2(64) NOT NULL,
+  
+  PRIMARY KEY(Nazov_jazyka)
+);
+
+CREATE TABLE Ovlada (
+  Nickname NVARCHAR2(64) NOT NULL,
+  Nazov_jazyka NVARCHAR2(64) NOT NULL,
+  
+  Skusenost NVARCHAR2(64),
+  
+  PRIMARY KEY (Nickname,Nazov_jazyka)
+);
 
 
 CREATE TABLE Charakterizuje (
@@ -127,20 +142,25 @@ ALTER TABLE Test ADD FOREIGN KEY (Nickname_schvaleny) REFERENCES Uzivatel(Nickna
 ALTER TABLE Charakterizuje ADD FOREIGN KEY (ID_ticket) REFERENCES Ticket(ID_ticket);
 ALTER TABLE Charakterizuje ADD FOREIGN KEY (ID_bug) REFERENCES Bug(ID_bug);
 
+ALTER TABLE Ovlada ADD FOREIGN KEY (Nickname) REFERENCES Uzivatel;
+ALTER TABLE Ovlada ADD FOREIGN KEY (Nazov_jazyka) REFERENCES Programovaci_jazyk;
+
+ALTER TABLE Modul ADD FOREIGN KEY (Nazov_jazyka) REFERENCES Programovaci_jazyk;
+
 ALTER TABLE Modul ADD CONSTRAINTS chk_chybovost CHECK (chybovost >= 0 AND chybovost <= 100);
 ALTER TABLE Test ADD CONSTRAINTS chk_hodnotenie CHECK (Hodnotenie >= 0 AND Hodnotenie <= 100);
 
 
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('xxKebabmajsterxx', 'Peter Jablko', '21', 'Java, C++, C#');
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('AndreDankojeLegenda', 'Juraj Zemiak', '22', 'JavaScript, HTML, PHP');
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('MirrorMaster12', 'Jan Penaze', '23', 'Ruby, Python');
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('Cyborg13', 'Ondrej Vychodnar', '27', '');
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('Knedla8', 'Michal Krivozub', '19', '');
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('Destroyer-ultimate', 'Daniel Drevo', '33', 'C++,C');
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('Ahojakosamas', 'Jozef Koleso', '28', 'C#, .Net');
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('Iliketurtles', 'Adrian Karfiol', '31', 'Self, Smalltalk');
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('Whysoserious', 'Tomas Exekutor', '30', 'Delphi, Pascal');
-INSERT INTO Uzivatel (Nickname, Meno, Vek, Programovaci_jazyk) VALUES('NovaZilina', 'Silvester Akalas', '18', 'GO, D');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('xxKebabmajsterxx', 'Peter Jablko', '21');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('AndreDankojeLegenda', 'Juraj Zemiak', '22');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('MirrorMaster12', 'Jan Penaze', '23');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('Cyborg13', 'Ondrej Vychodnar', '27');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('Knedla8', 'Michal Krivozub', '19');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('Destroyer-ultimate', 'Daniel Drevo', '33');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('Ahojakosamas', 'Jozef Koleso', '28');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('Iliketurtles', 'Adrian Karfiol', '31');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('Whysoserious', 'Tomas Exekutor', '30');
+INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('NovaZilina', 'Silvester Akalas', '18');
 
 INSERT INTO Programator (Nickname, Produkt, Rank) VALUES('xxKebabmajsterxx', 'OpenStack', '8');
 INSERT INTO Programator (Nickname, Produkt, Rank) VALUES('AndreDankojeLegenda', 'OpenStack', '6');
