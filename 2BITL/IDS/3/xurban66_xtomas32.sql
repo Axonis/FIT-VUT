@@ -217,6 +217,8 @@ INSERT INTO Test (ID_test, Datum_zaciatku, Datum_konca, Hodnotenie, ID_patch, Ni
 INSERT INTO Test (ID_test, Datum_zaciatku, Datum_konca, Hodnotenie, ID_patch, Nickname_schvaleny) VALUES('20170216', '07-01-2017', '07-05-2017', '100,0', '20170216', null);
 INSERT INTO Test (ID_test, Datum_zaciatku, Datum_konca, Hodnotenie, ID_patch, Nickname_schvaleny) VALUES('20170217', '13-03-2017', '13-03-2018', '9,6', '20170212', 'Ahojakosamas');
 
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('AndreDankojeLegenda' , 'Java', 'Zaciatocnik');
+
 /*2 JOIN - Mena programatorov s rankom vyssim ako 5, ktori schvalili testy s hodnotenim nizsim ako 90*/
 SELECT Test.Nickname_schvaleny FROM Test JOIN Programator ON Test.Nickname_schvaleny = Programator.Nickname WHERE Test.Hodnotenie <= 90 AND Programator.Rank > 5;
 
