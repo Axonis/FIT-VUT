@@ -223,7 +223,10 @@ INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('MirrorMaster12',
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('MirrorMaster12', 'C++', 'Advanced');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('MirrorMaster12', 'D', 'Advanced');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('NovaZilina', 'D', 'Beginner');
-INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('NovaZilina', 'Java', 'Beginner');
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('NovaZilina', 'Java', 'Advanced');
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx', 'C++', 'Expert');
+INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx', 'GO', 'Beginner');
+
 
 
 
