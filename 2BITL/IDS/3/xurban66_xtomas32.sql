@@ -11,6 +11,7 @@ DROP TABLE Bezny_uzivatel   	CASCADE CONSTRAINTS;
 DROP TABLE Programovaci_jazyk 	CASCADE CONSTRAINTS;
 DROP TABLE Ovlada             CASCADE CONSTRAINTS;
 DROP SEQUENCE ID_ticket_sequence;
+DROP SEQUENCE ID_bug_sequence;
 
 
 CREATE TABLE Modul (
@@ -150,6 +151,8 @@ ALTER TABLE Modul ADD FOREIGN KEY (Nazov_jazyka) REFERENCES Programovaci_jazyk;
 ALTER TABLE Modul ADD CONSTRAINTS chk_chybovost CHECK (chybovost >= 0 AND chybovost <= 100);
 ALTER TABLE Test ADD CONSTRAINTS chk_hodnotenie CHECK (Hodnotenie >= 0 AND Hodnotenie <= 100);
 
+
+/* Sequence + trigger pre auto increment */
 CREATE SEQUENCE ID_ticket_sequence
   START WITH 1
   INCREMENT BY 1
@@ -166,29 +169,40 @@ BEGIN
 END;
 /
 
-/*CREATE OR REPLACE TRIGGER Dlzka_testu
-AFTER UPDATE ON Test
+/* Sequence + trigger pre auto increment */
+CREATE SEQUENCE ID_bug_sequence
+  START WITH 1
+  INCREMENT BY 1
+  CACHE 100;
+  
+CREATE OR REPLACE TRIGGER Bug_number 
+BEFORE INSERT ON Bug 
 FOR EACH ROW
-DECLARE trvanie INT;
-
-BEGIN 
-  trvanie := Test.Datum_konca - Test.Datum_zaciatku;
-  dbms_output.put_line('Trvanie testu: ' || trvanie);
-END;
-/*/
-
-/*CREATE OR REPLACE TRIGGER Modul_zodpovedny
-AFTER INSERT ON Modul
-FOR EACH ROW
-WHEN (Zodpovedny_programator is null)
-DECLARE Meno NVARCHAR2(64)
 
 BEGIN
-  SELECT Nickname FROM Programator WHERE 
-  SELECT Nicknane,MAX(Rank) FROM Programator WHERE Programovaci_jazyk
+  SELECT ID_bug_sequence.NEXTVAL
+  INTO   :new.ID_bug
+  FROM   dual;
 END;
-/*/
+/
+  
+CREATE OR REPLACE TRIGGER Trigger_chybovost
+AFTER INSERT ON Bug
+DECLARE Modul_chyb FLOAT;
+Vs_chyb FLOAT;
+Vysl FLOAT;
+Cislo_bugu INT;
+Cislo_modulu INT;
 
+BEGIN 
+  SELECT MAX(ID_bug) INTO Cislo_bugu FROM Bug;
+  SELECT ID_modul INTO Cislo_modulu FROM Bug WHERE ID_bug = Cislo_bugu;
+  SELECT COUNT(ID_modul) INTO Modul_chyb FROM Bug WHERE ID_modul = Cislo_modulu GROUP BY ID_modul;
+  SELECT SUM(tmp) INTO Vs_chyb FROM (SELECT COUNT(ID_modul)AS tmp FROM Bug GROUP BY ID_modul);
+  Vysl := Modul_chyb / Vs_chyb * 100;
+  UPDATE Modul SET Chybovost = Vysl WHERE ID_modul = Cislo_modulu;
+END;
+/
 
 INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('xxKebabmajsterxx', 'Peter Jablko', '21');
 INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('AndreDankojeLegenda', 'Juraj Zemiak', '22');
@@ -225,7 +239,6 @@ INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpove
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('3', '1,14', '17-02-2017', 'xxKebabmajsterxx', 'GO');
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('4', '3,84', '16-11-2015', 'AndreDankojeLegenda', 'Python');
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('5', '0,12', '14-01-2016', 'xxKebabmajsterxx', 'C++');
-INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('6', '0,00', '14-06-2016', null, 'D');
 
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170217', '0', '03-12-2017', '', 'xxKebabmajsterxx');
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170219', '1', '07-11-2017', '05-12-2017', 'Ahojakosamas');
@@ -233,18 +246,18 @@ INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nicknam
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170216', '1', '05-09-2017', '07-12-2017', 'Knedla8');
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170212', '1', '04-08-2017', '08-12-2017', 'Knedla8');
 
-INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost, ID_patch) VALUES('2190732', '1', 'Logic', 'High', '20170219');
-INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost, ID_patch) VALUES('2190746', '2', 'Syntax', 'Medium', '20170216');
-INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost, ID_patch) VALUES('2190789', '3', 'Not a bug', 'Low', '20170218');
-INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost) VALUES('2190719', '4', 'Interfacing', 'Medium');
-INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost) VALUES('2190729', '5', 'Resource', 'Low');
-INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost) VALUES('2165646', '1', 'Logic', 'High');
-INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost) VALUES('2132213', '2', 'Syntax', 'Medium');
-INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost) VALUES('6897983', '3', 'Logic', 'High');
-INSERT INTO Bug (ID_bug, ID_modul, Typ, Zavaznost) VALUES('8978653', '1', 'Resource', 'High');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('1', 'Logic', 'High', '20170219');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('2', 'Syntax', 'Medium', '20170216');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('3', 'Not a bug', 'Low', '20170218');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('4', 'Interfacing', 'Medium');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('5', 'Resource', 'Low');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('1', 'Logic', 'High');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('2', 'Syntax', 'Medium');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('3', 'Logic', 'High');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('1', 'Resource', 'High');
 
-INSERT INTO Zranitelnost (ID_vulnerablity, Miera_nebezpecenstva, Moznost_zneuzitia) VALUES('2190732', 'High', 'Modul');
-INSERT INTO Zranitelnost (ID_vulnerablity, Miera_nebezpecenstva, Moznost_zneuzitia) VALUES('2190746', 'Critical', 'System');
+INSERT INTO Zranitelnost (ID_vulnerablity, Miera_nebezpecenstva, Moznost_zneuzitia) VALUES('6', 'High', 'Modul');
+INSERT INTO Zranitelnost (ID_vulnerablity, Miera_nebezpecenstva, Moznost_zneuzitia) VALUES('8', 'Critical', 'System');
 
 INSERT INTO Ticket (Datum_podania, Stav, Nickname_prideleny, Nickname_vyvoreny) VALUES('23-03-2017', 'Open', 'xxKebabmajsterxx', 'Cyborg13');
 INSERT INTO Ticket (Datum_podania, Stav, Nickname_prideleny, Nickname_vyvoreny) VALUES('13-02-2017', 'Assigned', 'MirrorMaster12', 'Knedla8');
@@ -252,13 +265,13 @@ INSERT INTO Ticket (Datum_podania, Stav, Nickname_prideleny, Nickname_vyvoreny) 
 INSERT INTO Ticket (Datum_podania, Stav, Nickname_prideleny, Nickname_vyvoreny) VALUES('02-11-2017', 'Closed', 'Ahojakosamas', 'Knedla8');
 INSERT INTO Ticket (Datum_podania, Stav, Nickname_prideleny, Nickname_vyvoreny) VALUES('24-03-2017', 'Need Info', 'Destroyer-ultimate', 'Cyborg13');
 
-INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('1', '2190732', '21-03-2016', '10', '1.Install System, 2.Run cmd command', 'Kernel Panic');
-INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('2', '2190732', '13-03-2015', '7', '1.Install System, 2.Run cmd command', 'Kernel Panic');
-INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('2', '2190746', '11-03-2014', '10', '1.Install System, 2.Run cmd command', 'Kernel Panic');
-INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('3', '2190746', '01-04-2017', '7', '1.Install System, 2.Run cmd command', 'Kernel Panic');
-INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('1', '2165646', '06-05-2017', '8', '1.Install System, 2.Run cmd command', 'Kernel Panic');
-INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('2', '2132213', '07-03-2017', '9', '1.Install System, 2.Run cmd command', 'Kernel Panic');
-INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('3', '6897983', '08-03-2017', '1', '1.Install System, 2.Run cmd command', 'Kernel Panic');
+INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('1', '8', '21-03-2016', '10', '1.Install System, 2.Run cmd command', 'Kernel Panic');
+INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('2', '7', '13-03-2015', '7', '1.Install System, 2.Run cmd command', 'Kernel Panic');
+INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('2', '3', '11-03-2014', '10', '1.Install System, 2.Run cmd command', 'Kernel Panic');
+INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('3', '4', '01-04-2017', '7', '1.Install System, 2.Run cmd command', 'Kernel Panic');
+INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('1', '5', '06-05-2017', '8', '1.Install System, 2.Run cmd command', 'Kernel Panic');
+INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('2', '6', '07-03-2017', '9', '1.Install System, 2.Run cmd command', 'Kernel Panic');
+INSERT INTO Charakterizuje (ID_ticket, ID_bug, Datum_vyskytu, Frekvencia_vyskytu, Popis_vyskytu, Popis_problemu) VALUES ('3', '9', '08-03-2017', '1', '1.Install System, 2.Run cmd command', 'Kernel Panic');
 
 INSERT INTO Test (ID_test, Datum_zaciatku, Datum_konca, Hodnotenie, ID_patch, Nickname_schvaleny) VALUES('20170102', '01-03-2017', '01-03-2017', '98,6', '20170217', 'xxKebabmajsterxx');
 INSERT INTO Test (ID_test, Datum_zaciatku, Datum_konca, Hodnotenie, ID_patch, Nickname_schvaleny) VALUES('20170214', '01-04-2017', '01-05-2017', '91,8', '20170219', null);
@@ -283,36 +296,91 @@ INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('NovaZilina', 'Ja
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx', 'C++', 'Expert');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx', 'GO', 'Beginner');
 
+/* Test modul trigger */
+INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('6', '0,00', '14-06-2016', null, 'D');
+
 /*2 JOIN - Mena programatorov s rankom vyssim ako 5, ktori schvalili testy s hodnotenim nizsim ako 90*/
-SELECT Test.Nickname_schvaleny FROM Test JOIN Programator ON Test.Nickname_schvaleny = Programator.Nickname WHERE Test.Hodnotenie <= 90 AND Programator.Rank > 5;
+SELECT Test.Nickname_schvaleny 
+FROM Test 
+JOIN Programator ON Test.Nickname_schvaleny = Programator.Nickname 
+WHERE Test.Hodnotenie <= 90 AND Programator.Rank > 5;
 
 /*2 JOIN + IN - Aka je zavaznost bugov ktore su zatial nepridelene*/
-SELECT Zavaznost FROM BUG WHERE ID_bug IN (SELECT ID_bug FROM Ticket JOIN Charakterizuje ON Ticket.ID_ticket = Charakterizuje.ID_ticket WHERE Stav = 'New');
+SELECT Zavaznost 
+FROM BUG 
+WHERE ID_bug IN 
+(SELECT ID_bug 
+	FROM Ticket 
+	JOIN Charakterizuje ON Ticket.ID_ticket = Charakterizuje.ID_ticket 
+	WHERE Stav = 'New'
+);
 
 /*2 JOIN - Aky rank ma uzivatel ktory zodpoveda za modul cislo 2*/
-SELECT Nickname_zodpovedny, Rank FROM Programator JOIN Modul ON Programator.Nickname = Modul.Nickname_zodpovedny WHERE ID_modul = 2;
+SELECT Nickname_zodpovedny, Rank 
+FROM Programator 
+JOIN Modul ON Programator.Nickname = Modul.Nickname_zodpovedny 
+WHERE ID_modul = 2;
 
 /*3 JOIN - Aky patch opravil zranitelnost bugu 2190732*/
-SELECT Patch.ID_patch FROM Bug JOIN Patch ON Bug.ID_patch = Patch.ID_patch JOIN Zranitelnost ON Zranitelnost.ID_vulnerablity = Bug.ID_bug WHERE ID_vulnerablity = 2190732;
+SELECT Patch.ID_patch 
+FROM Bug 
+JOIN Patch ON Bug.ID_patch = Patch.ID_patch 
+JOIN Zranitelnost ON Zranitelnost.ID_vulnerablity = Bug.ID_bug 
+WHERE ID_vulnerablity = 2190732;
 
 /*3 JOIN + IN - Na akych bugoch pracuje dany programator*/
-SELECT ID_Bug FROM Bug WHERE ID_bug IN (SELECT ID_bug FROM Ticket JOIN Charakterizuje ON Ticket.ID_ticket = Charakterizuje.ID_ticket WHERE Ticket.Nickname_prideleny = 'xxKebabmajsterxx');
+SELECT ID_Bug 
+FROM Bug 
+WHERE ID_bug IN 
+(SELECT ID_bug 
+	FROM Ticket 
+	JOIN Charakterizuje ON Ticket.ID_ticket = Charakterizuje.ID_ticket 
+	WHERE Ticket.Nickname_prideleny = 'xxKebabmajsterxx'
+);
 
 /*3 JOIN + EXISTS - Ktore zranitelnosti sa testuju*/
-SELECT ID_vulnerablity FROM Zranitelnost WHERE EXISTS (SELECT ID_bug FROM Test JOIN Patch ON Test.ID_patch = Patch.ID_patch JOIN Bug ON Patch.ID_patch = Bug.ID_patch);
+SELECT ID_vulnerablity 
+FROM Zranitelnost 
+WHERE EXISTS 
+(SELECT ID_bug 
+	FROM Test JOIN Patch ON Test.ID_patch = Patch.ID_patch 
+	JOIN Bug ON Patch.ID_patch = Bug.ID_patch
+);
 
 /*GROUP BY, AGGREGATE COUNT, ORDER BY - Pocet patchov vydanych jednotlivymi uzivatelmi*/
-SELECT Nickname_vydany, COUNT(ID_patch) FROM Patch GROUP BY Nickname_vydany ORDER BY COUNT(ID_patch) DESC; 
+SELECT Nickname_vydany, COUNT(ID_patch) 
+FROM Patch 
+GROUP BY Nickname_vydany 
+ORDER BY COUNT(ID_patch) 
+DESC; 
 
 /*GROUP BY, AGGREGATE COUNT, MAX, ORDER BY - Ktore moduly maju kolko bugov*/
-SELECT modul_id, bug_cnt FROM (SELECT Modul.ID_modul AS modul_id,COUNT(ID_bug) AS bug_cnt FROM Bug JOIN Modul ON Bug.ID_modul = Modul.ID_modul GROUP BY Modul.ID_modul) ORDER BY bug_cnt DESC;
+SELECT modul_id, bug_cnt 
+FROM 
+(SELECT Modul.ID_modul AS modul_id,COUNT(ID_bug) AS bug_cnt 
+	FROM Bug 
+	JOIN Modul ON Bug.ID_modul = Modul.ID_modul 
+	GROUP BY Modul.ID_modul
+) 
+ORDER BY bug_cnt 
+DESC;
 
 /*GROUP BY, AGGREGATE COUNT - Pocet ticketov k bugom podanym pred rokom 2017*/
-SELECT ID_bug, COUNT(ID_ticket) FROM Charakterizuje WHERE Datum_vyskytu <= '01/01/2017' GROUP BY Charakterizuje.ID_bug;
+SELECT ID_bug, COUNT(ID_ticket) 
+FROM Charakterizuje 
+WHERE Datum_vyskytu <= '01/01/2017' 
+GROUP BY Charakterizuje.ID_bug;
 
-SELECT Nickname, Rank FROM (
-SELECT UNIQUE Programator.NICKNAME, Rank FROM Programator LEFT JOIN Uzivatel ON Programator.Nickname = Uzivatel.Nickname JOIN Ovlada ON Uzivatel.Nickname = Ovlada.Nickname 
-JOIN Programovaci_jazyk ON Ovlada.Nazov_jazyka = Programovaci_jazyk.Nazov_jazyka);
-
-
-SELECT * FROM Modul;
+/* Pristupove prava */
+GRANT ALL ON Test TO xtomas32;
+GRANT ALL ON Uzivatel TO xtomas32;
+GRANT ALL ON Programator TO xtomas32;
+GRANT ALL ON Bezny_uzivatel TO xtomas32;
+GRANT ALL ON Bug TO xtomas32;
+GRANT ALL ON Ticket TO xtomas32;
+GRANT ALL ON Programovaci_jazyk TO xtomas32;
+GRANT ALL ON Zranitelnost TO xtomas32;
+GRANT ALL ON Charakterizuje TO xtomas32;
+GRANT ALL ON Ovlada TO xtomas32;
+GRANT ALL ON Modul TO xtomas32;
+GRANT ALL ON Patch TO xtomas32;
