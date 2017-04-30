@@ -1,3 +1,6 @@
+
+SET serveroutput ON;
+
 DROP TABLE Bug      			CASCADE CONSTRAINTS;
 DROP TABLE Modul    			CASCADE CONSTRAINTS;
 DROP TABLE Uzivatel 			CASCADE CONSTRAINTS;
@@ -12,6 +15,7 @@ DROP TABLE Programovaci_jazyk 	CASCADE CONSTRAINTS;
 DROP TABLE Ovlada             CASCADE CONSTRAINTS;
 DROP SEQUENCE ID_ticket_sequence;
 DROP SEQUENCE ID_bug_sequence;
+DROP MATERIALIZED VIEW Bug_view;
 
 
 CREATE TABLE Modul (
@@ -201,8 +205,41 @@ BEGIN
   SELECT SUM(tmp) INTO Vs_chyb FROM (SELECT COUNT(ID_modul)AS tmp FROM Bug GROUP BY ID_modul);
   Vysl := Modul_chyb / Vs_chyb * 100;
   UPDATE Modul SET Chybovost = Vysl WHERE ID_modul = Cislo_modulu;
+  
 END;
 /
+      SELECT  * from Uzivatel Join Ovlada on Uzivatel.NICKNAME = Ovlada.NICKNAME ;
+
+
+CREATE OR REPLACE PROCEDURE vyuzivanie_prog_jazyku AS
+  cursor c_jazyky is SELECT * FROM Programovaci_jazyk ;
+  r_jazyk c_jazyky%ROWTYPE;
+  pocet_programatorov int;
+  jazyk_ovlada INT;
+  tmp FLOAT;
+  
+  begin
+  
+  SELECT  COUNT(unique (Ovlada.NICKNAME)) INTO pocet_programatorov from Uzivatel Join Ovlada on Uzivatel.NICKNAME = Ovlada.NICKNAME;
+           DBMS_OUTPUT.PUT_LINE('Kolko percent uzivatelov ovlada dany jazyk');
+  open c_jazyky;
+  loop
+   fetch c_jazyky into r_jazyk;
+      exit when c_jazyky%NOTFOUND;
+
+      SELECT  COUNT(unique (Ovlada.NICKNAME)) into jazyk_ovlada from Uzivatel Join Ovlada on Uzivatel.NICKNAME = Ovlada.NICKNAME WHERE Ovlada.NAZOV_JAZYKA = r_jazyk.Nazov_jazyka;
+         tmp := jazyk_ovlada / pocet_programatorov * 100;
+         DBMS_OUTPUT.PUT(r_jazyk.Nazov_jazyka);
+         DBMS_OUTPUT.PUT('  >>  ');
+         DBMS_OUTPUT.PUT_LINE(ROUND(tmp, 2));
+
+  end loop;
+  close c_jazyky;
+  
+END;
+/
+
+exec vyuzivanie_prog_jazyku;
 
 INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('xxKebabmajsterxx', 'Peter Jablko', '21');
 INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('AndreDankojeLegenda', 'Juraj Zemiak', '22');
@@ -297,7 +334,7 @@ INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx', 'GO', 'Beginner');
 
 /* Test modul trigger */
-INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('6', '0,00', '14-06-2016', null, 'D');
+INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('6', '0,00', '14-06-2016', 'NovaZilina', 'D');
 
 /*2 JOIN - Mena programatorov s rankom vyssim ako 5, ktori schvalili testy s hodnotenim nizsim ako 90*/
 SELECT Test.Nickname_schvaleny 
@@ -384,3 +421,19 @@ GRANT ALL ON Charakterizuje TO xtomas32;
 GRANT ALL ON Ovlada TO xtomas32;
 GRANT ALL ON Modul TO xtomas32;
 GRANT ALL ON Patch TO xtomas32;
+
+
+CREATE MATERIALIZED VIEW LOG ON Bug WITH PRIMARY KEY,ROWID(ID_modul)INCLUDING NEW VALUES; 
+CREATE MATERIALIZED VIEW Bug_view
+CACHE BUILD IMMEDIATE REFRESH FAST ON COMMIT ENABLE QUERY REWRITE
+  AS SELECT ID_modul as "Modul", count(ID_bug) as "Pocet bugov v danom module" FROM Bug GROUP BY ID_modul;
+GRANT ALL ON Bug_view TO xtomas32;
+
+
+SELECT * from Bug_view;
+INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('3', 'Kernel Panic', 'Low', '20170218');
+COMMIT;
+SELECT * from Bug_view;
+
+
+exec vyuzivanie_prog_jazyku();
