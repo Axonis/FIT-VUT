@@ -245,11 +245,47 @@ CREATE OR REPLACE PROCEDURE Vyuzivanie_prog_jazykov AS
          vysl := jazyk_ovlada / pocet_programatorov * 100;
          DBMS_OUTPUT.PUT(r_jazyk.Nazov_jazyka);
          DBMS_OUTPUT.PUT('  >>  ');
-         DBMS_OUTPUT.PUT_LINE(ROUND(vysl, 2));
+         DBMS_OUTPUT.PUT_LINE(ROUND(vysl, 2) || '%');
 
   END LOOP;
   CLOSE c_jazyky;
   
+END;
+/
+
+CREATE OR REPLACE PROCEDURE Ticket_opraveny (c_ticket NUMBER) AS
+  CURSOR c_bug IS SELECT Bug.ID_Bug,ID_patch FROM Bug JOIN Charakterizuje ON Charakterizuje.ID_bug = Bug.ID_bug WHERE ID_ticket = c_ticket;
+  r_bug c_bug%ROWTYPE;
+  datum_ticket DATE;
+  datum_patch DATE;
+  curr_bug INT;
+  no_patch_bug EXCEPTION;
+  
+BEGIN
+  SELECT Datum_podania INTO Datum_ticket FROM Ticket WHERE ID_ticket = c_ticket;
+  SELECT MAX(Datum_zavedenia) INTO Datum_patch FROM Patch NATURAL JOIN Bug 
+  JOIN Charakterizuje ON Bug.ID_bug  = Charakterizuje.ID_bug WHERE ID_ticket = c_ticket;
+  
+  OPEN c_bug;
+  LOOP 
+    FETCH c_bug INTO r_bug;
+	  EXIT WHEN c_bug%NOTFOUND;
+    
+    curr_bug := r_bug.ID_bug;
+	  IF r_bug.ID_patch IS NULL THEN
+	    RAISE no_patch_bug;
+	  END IF;
+	  
+  END LOOP;
+  CLOSE c_bug;
+  
+  DBMS_OUTPUT.PUT_LINE('Ticket cislo: ' || c_ticket || ' otvoreny dna: ' || datum_ticket || ' bol vyrieseny dna: ' || datum_patch || '. ');
+  
+  EXCEPTION
+    WHEN no_patch_bug THEN 
+	  DBMS_OUTPUT.PUT_LINE('Ticket cislo: ' || c_ticket || ' nema vyrieseny bug cislo: ' || curr_bug );
+	WHEN OTHERS THEN
+	  RAISE_APPLICATION_ERROR(-20000, 'Neocakavana chyba');
 END;
 /
 
@@ -295,15 +331,18 @@ INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nicknam
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170218', '1', '06-10-2017', '06-12-2017', 'Cyborg13');
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170216', '1', '05-09-2017', '07-12-2017', 'Knedla8');
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170212', '1', '04-08-2017', '08-12-2017', 'Knedla8');
+INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170315', '1', '15-03-2017', '16-03-2017', 'xxKebabmajsterxx');
+
+
 
 INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('1', 'Logic', 'High', '20170219');
 INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('2', 'Syntax', 'Medium', '20170216');
 INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('3', 'Not a bug', 'Low', '20170218');
 INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('4', 'Interfacing', 'Medium');
-INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('5', 'Resource', 'Low');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('5', 'Resource', 'Low', '20170315');
 INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('1', 'Logic', 'High');
-INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('2', 'Syntax', 'Medium');
-INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('3', 'Logic', 'High');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('2', 'Syntax', 'Medium', '20170217');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('3', 'Logic', 'High', '20170216');
 INSERT INTO Bug (ID_modul, Typ, Zavaznost) VALUES('1', 'Resource', 'High');
 
 INSERT INTO Zranitelnost (ID_vulnerablity, Miera_nebezpecenstva, Moznost_zneuzitia) VALUES('6', 'High', 'Modul');
@@ -456,9 +495,17 @@ CACHE BUILD IMMEDIATE REFRESH FAST ON COMMIT ENABLE QUERY REWRITE
 GRANT ALL ON Bug_view TO xtomas32;
 
 SELECT * from Bug_view;
-INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('3', 'Kernel Panic', 'Low', '20170218');
+INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('3', 'Kernel Panic', 'Low', '20170217');
 COMMIT;
 SELECT * from Bug_view;
 
 /* Procedure + cursor */
 exec vyuzivanie_prog_jazykov();
+
+/* Procedure + cursor + exception */
+exec Ticket_opraveny(2);
+exec Ticket_opraveny(1);
+
+
+SELECT * FROM Bug JOIN Charakterizuje ON Charakterizuje.ID_bug = Bug.ID_bug WHERE ID_ticket = 1;
+
