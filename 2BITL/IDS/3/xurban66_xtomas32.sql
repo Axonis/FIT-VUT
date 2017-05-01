@@ -461,15 +461,15 @@ GROUP BY Charakterizuje.ID_bug;
 /* Explain plan + Index */
 EXPLAIN PLAN FOR
 SELECT Meno, AVG(Rank)
-FROM Uzivatel JOIN Programator ON Uzivatel.Nickname = Programator.Nickname
+FROM Uzivatel NATURAL JOIN Programator
 GROUP BY Rank, Meno;
 SELECT * FROM TABLE(DBMS_XPLAN.display);
 
 CREATE INDEX Index_explain ON Uzivatel(Meno);
-  
+
 EXPLAIN PLAN FOR
 SELECT /*+ INDEX(Uzivatel Index_explain)*/ Meno, AVG(Rank)
-FROM Uzivatel JOIN Programator ON Uzivatel.Nickname = Programator.Nickname
+FROM Uzivatel NATURAL JOIN Programator
 GROUP BY Rank, Meno;
 SELECT * FROM TABLE(DBMS_XPLAN.display);
 
@@ -505,7 +505,4 @@ exec vyuzivanie_prog_jazykov();
 /* Procedure + cursor + exception */
 exec Ticket_opraveny(2);
 exec Ticket_opraveny(1);
-
-
-SELECT * FROM Bug JOIN Charakterizuje ON Charakterizuje.ID_bug = Bug.ID_bug WHERE ID_ticket = 1;
 
