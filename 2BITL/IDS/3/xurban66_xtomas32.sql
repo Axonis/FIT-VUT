@@ -159,8 +159,7 @@ ALTER TABLE Test ADD CONSTRAINTS chk_hodnotenie CHECK (Hodnotenie >= 0 AND Hodno
 /* Sequence + trigger pre auto increment */
 CREATE SEQUENCE ID_ticket_sequence
   START WITH 1
-  INCREMENT BY 1
-  CACHE 100;
+  INCREMENT BY 1;
 
 CREATE OR REPLACE TRIGGER Ticket_number 
 BEFORE INSERT ON Ticket 
@@ -176,8 +175,7 @@ END;
 /* Sequence + trigger pre auto increment */
 CREATE SEQUENCE ID_bug_sequence
   START WITH 1
-  INCREMENT BY 1
-  CACHE 100;
+  INCREMENT BY 1;
   
 CREATE OR REPLACE TRIGGER Bug_number 
 BEFORE INSERT ON Bug 
@@ -189,7 +187,8 @@ BEGIN
   FROM   dual;
 END;
 /
-  
+
+/* Trigger - Automaticky prepocita a aktualizuje atribut Chybovost v Module po pridani Bugu */  
 CREATE OR REPLACE TRIGGER Trigger_chybovost
 AFTER INSERT ON Bug
 DECLARE Modul_chyb FLOAT;
@@ -208,38 +207,51 @@ BEGIN
   
 END;
 /
-      SELECT  * from Uzivatel Join Ovlada on Uzivatel.NICKNAME = Ovlada.NICKNAME ;
 
+/* Trigger - Overenie ci atribut Skusenost ma spravny format */
+CREATE OR REPLACE TRIGGER Skusenost_check
+BEFORE INSERT OR UPDATE OF Skusenost ON Ovlada
+FOR EACH ROW
 
-CREATE OR REPLACE PROCEDURE vyuzivanie_prog_jazyku AS
-  cursor c_jazyky is SELECT * FROM Programovaci_jazyk ;
-  r_jazyk c_jazyky%ROWTYPE;
-  pocet_programatorov int;
-  jazyk_ovlada INT;
-  tmp FLOAT;
-  
-  begin
-  
-  SELECT  COUNT(unique (Ovlada.NICKNAME)) INTO pocet_programatorov from Uzivatel Join Ovlada on Uzivatel.NICKNAME = Ovlada.NICKNAME;
-           DBMS_OUTPUT.PUT_LINE('Kolko percent uzivatelov ovlada dany jazyk');
-  open c_jazyky;
-  loop
-   fetch c_jazyky into r_jazyk;
-      exit when c_jazyky%NOTFOUND;
-
-      SELECT  COUNT(unique (Ovlada.NICKNAME)) into jazyk_ovlada from Uzivatel Join Ovlada on Uzivatel.NICKNAME = Ovlada.NICKNAME WHERE Ovlada.NAZOV_JAZYKA = r_jazyk.Nazov_jazyka;
-         tmp := jazyk_ovlada / pocet_programatorov * 100;
-         DBMS_OUTPUT.PUT(r_jazyk.Nazov_jazyka);
-         DBMS_OUTPUT.PUT('  >>  ');
-         DBMS_OUTPUT.PUT_LINE(ROUND(tmp, 2));
-
-  end loop;
-  close c_jazyky;
-  
+BEGIN
+	IF :NEW.Skusenost != 'Beginner' AND 
+  :NEW.Skusenost != 'Advanced' AND 
+  :NEW.Skusenost != 'Expert' THEN
+    Raise_Application_Error(-20000, 'Nespravny format - Skusenost!');
+  END IF;
 END;
 /
 
-exec vyuzivanie_prog_jazyku;
+/* Procedure + cursor - Percentualne vyuzitie programovacich jazykov v DB */
+CREATE OR REPLACE PROCEDURE Vyuzivanie_prog_jazykov AS
+  cursor c_jazyky IS SELECT * FROM Programovaci_jazyk ;
+  r_jazyk c_jazyky%ROWTYPE;
+  pocet_programatorov int;
+  jazyk_ovlada INT;
+  vysl FLOAT;
+  
+  BEGIN
+  
+  SELECT  COUNT(UNIQUE (Ovlada.NICKNAME)) INTO pocet_programatorov from Uzivatel Join Ovlada on Uzivatel.NICKNAME = Ovlada.NICKNAME;
+           DBMS_OUTPUT.PUT_LINE('Kolko percent uzivatelov ovlada dany jazyk');
+  OPEN c_jazyky;
+  LOOP
+   FETCH c_jazyky INTO r_jazyk;
+      EXIT WHEN c_jazyky%NOTFOUND;
+
+      SELECT  COUNT(UNIQUE (Ovlada.NICKNAME)) INTO jazyk_ovlada 
+      FROM Uzivatel JOIN Ovlada ON Uzivatel.NICKNAME = Ovlada.NICKNAME 
+      WHERE Ovlada.NAZOV_JAZYKA = r_jazyk.Nazov_jazyka;
+         vysl := jazyk_ovlada / pocet_programatorov * 100;
+         DBMS_OUTPUT.PUT(r_jazyk.Nazov_jazyka);
+         DBMS_OUTPUT.PUT('  >>  ');
+         DBMS_OUTPUT.PUT_LINE(ROUND(vysl, 2));
+
+  END LOOP;
+  CLOSE c_jazyky;
+  
+END;
+/
 
 INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('xxKebabmajsterxx', 'Peter Jablko', '21');
 INSERT INTO Uzivatel (Nickname, Meno, Vek) VALUES('AndreDankojeLegenda', 'Juraj Zemiak', '22');
@@ -276,6 +288,7 @@ INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpove
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('3', '1,14', '17-02-2017', 'xxKebabmajsterxx', 'GO');
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('4', '3,84', '16-11-2015', 'AndreDankojeLegenda', 'Python');
 INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('5', '0,12', '14-01-2016', 'xxKebabmajsterxx', 'C++');
+INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('6', '0,00', '14-06-2016', 'NovaZilina', 'D');
 
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170217', '0', '03-12-2017', '', 'xxKebabmajsterxx');
 INSERT INTO Patch (ID_patch, Schvalenie, Datum_vydania, Datum_zavedenia, Nickname_vydany) VALUES('20170219', '1', '07-11-2017', '05-12-2017', 'Ahojakosamas');
@@ -333,8 +346,6 @@ INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('NovaZilina', 'Ja
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx', 'C++', 'Expert');
 INSERT INTO Ovlada (Nickname, Nazov_jazyka, Skusenost) VALUES ('xxKebabmajsterxx', 'GO', 'Beginner');
 
-/* Test modul trigger */
-INSERT INTO Modul (ID_modul, chybovost, datum_poslednej_upravy, Nickname_zodpovedny, Nazov_jazyka) VALUES('6', '0,00', '14-06-2016', 'NovaZilina', 'D');
 
 /*2 JOIN - Mena programatorov s rankom vyssim ako 5, ktori schvalili testy s hodnotenim nizsim ako 90*/
 SELECT Test.Nickname_schvaleny 
@@ -408,6 +419,21 @@ FROM Charakterizuje
 WHERE Datum_vyskytu <= '01/01/2017' 
 GROUP BY Charakterizuje.ID_bug;
 
+/* Explain plan + Index */
+EXPLAIN PLAN FOR
+SELECT Meno, AVG(Rank)
+FROM Uzivatel JOIN Programator ON Uzivatel.Nickname = Programator.Nickname
+GROUP BY Rank, Meno;
+SELECT * FROM TABLE(DBMS_XPLAN.display);
+
+CREATE INDEX Index_explain ON Uzivatel(Meno);
+  
+EXPLAIN PLAN FOR
+SELECT /*+ INDEX(Uzivatel Index_explain)*/ Meno, AVG(Rank)
+FROM Uzivatel JOIN Programator ON Uzivatel.Nickname = Programator.Nickname
+GROUP BY Rank, Meno;
+SELECT * FROM TABLE(DBMS_XPLAN.display);
+
 /* Pristupove prava */
 GRANT ALL ON Test TO xtomas32;
 GRANT ALL ON Uzivatel TO xtomas32;
@@ -422,18 +448,17 @@ GRANT ALL ON Ovlada TO xtomas32;
 GRANT ALL ON Modul TO xtomas32;
 GRANT ALL ON Patch TO xtomas32;
 
-
+/* Materialized View */
 CREATE MATERIALIZED VIEW LOG ON Bug WITH PRIMARY KEY,ROWID(ID_modul)INCLUDING NEW VALUES; 
 CREATE MATERIALIZED VIEW Bug_view
 CACHE BUILD IMMEDIATE REFRESH FAST ON COMMIT ENABLE QUERY REWRITE
-  AS SELECT ID_modul as "Modul", count(ID_bug) as "Pocet bugov v danom module" FROM Bug GROUP BY ID_modul;
+  AS SELECT ID_modul AS "Cislo modulu", count(ID_bug) AS "Pocet bugov v danom module" FROM Bug GROUP BY ID_modul;
 GRANT ALL ON Bug_view TO xtomas32;
-
 
 SELECT * from Bug_view;
 INSERT INTO Bug (ID_modul, Typ, Zavaznost, ID_patch) VALUES('3', 'Kernel Panic', 'Low', '20170218');
 COMMIT;
 SELECT * from Bug_view;
 
-
-exec vyuzivanie_prog_jazyku();
+/* Procedure + cursor */
+exec vyuzivanie_prog_jazykov();
