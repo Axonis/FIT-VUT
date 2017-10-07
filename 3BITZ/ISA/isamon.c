@@ -6,10 +6,9 @@ int main(int argc, char *argv[]) {
 
     cli_parser(argc, argv);
 
-    exit (0);
 }
 
-int validated_number(char* input, bool type) {
+int validated_number(char *input, bool type) {
     char *ptr = NULL;
     long tmp;
 
@@ -17,29 +16,49 @@ int validated_number(char* input, bool type) {
     if (*ptr != NULL) {
         if (type == true) {
             if (tmp > 65535 && tmp < 0)
-                perror("Invalid port number !\n");
-        }
-        else
-            perror("Invalid max RTT !\n");
+                print_error(ERR_PORT);
+        } else
+            print_error(ERR_WAIT);
 
-        print_usage();
-        exit(ERR_ARG);
+        print_error(ERR_HELP);
     }
 
-    return (int)tmp;
+    return (int) tmp;
 }
 
 
-void print_usage() {
-    fprintf(stderr, "Usage:\n"
-            "isamon [-h] [-i <interface>] [-t] [-u] [-p <port>] [-w <ms>] -n <net_address/mask> \n"
-            "   -h --help -- zobrazí nápovědu \n"
-            "   -i --interface <interface> -- rozhraní na kterém bude nástroj scanovat \n"
-            "   -n --network <net_address/mask> -- ip adresa síťe s maskou definující rozsah pro scanování \n"
-            "   -t --tcp -- použije TCP \n"
-            "   -u --udp -- použije UDP \n"
-            "   -p --port <port> -- specifikace scanovaného portu, pokud není zadaný, scanujte celý rozsah \n"
-            "   -w --wait <ms> -- dodatečná informace pro Váš nástroj jaké je maximální přípustné RTT ");
+void print_error(int error) {
+    switch (error) {
+        case 0:
+            fprintf(stderr, "Usage:\n"
+                    "isamon [-h] [-i <interface>] [-t] [-u] [-p <port>] [-w <ms>] -n <net_address/mask> \n"
+                    "   -h --help -- zobrazí nápovědu \n"
+                    "   -i --interface <interface> -- rozhraní na kterém bude nástroj scanovat \n"
+                    "   -n --network <net_address/mask> -- ip adresa síťe s maskou definující rozsah pro scanování \n"
+                    "   -t --tcp -- použije TCP \n"
+                    "   -u --udp -- použije UDP \n"
+                    "   -p --port <port> -- specifikace scanovaného portu, pokud není zadaný, scanujte celý rozsah \n"
+                    "   -w --wait <ms> -- dodatečná informace pro Váš nástroj jaké je maximální přípustné RTT ");
+            break;
+
+        case 1:
+            fprintf(stderr, "Invalid port number !\n");
+            break;
+
+        case 2:
+            fprintf(stderr, "Invalid max RTT !\n");
+            break;
+
+        case 3:
+            fprintf(stderr, "Duplicite declaration of an argument\n");
+            break;
+
+        default:
+            fprintf(stderr, "Unknown error");
+            break;
+
+    }
+    exit(error);
 }
 
 void cli_parser(int count, char *argument[]) {
@@ -60,47 +79,62 @@ void cli_parser(int count, char *argument[]) {
                 {0, 0,                           0, 0}
         };
 
-        c = getopt_long(count, argument, "htu:i:n:p:w:", long_options, &option_index);
-
+        c = getopt_long(count, argument, "htui:n:p:w:", long_options, &option_index);
         if (c == -1)
             break;
 
         switch (c) {
-
             case 'h':
                 printf("option h \n");
-                print_usage();
-                exit(0);
+                print_error(0);
                 break;
 
             case 'i':
+                if (flags.i)
+                    print_error(ERR_DUPL);
                 args.interface = optarg;
                 printf("option i with value '%s'\n", args.interface);
+                flags.i++;
                 break;
 
             case 'n':
+                if (flags.n)
+                    print_error(ERR_DUPL);
                 args.network = optarg;
-                printf("option n with value '%s'\n", args.network );
+                printf("option n with value '%s'\n", args.network);
+                flags.n++;
                 break;
 
             case 't':
+                if (flags.t)
+                    print_error(ERR_DUPL);
                 args.tcp = true;
                 printf("option t '%d'\n", args.tcp);
+                flags.t++;
                 break;
 
             case 'u':
+                if (flags.u)
+                    print_error(ERR_DUPL);
                 args.udp = true;
                 printf("option u '%d'\n", args.udp);
+                flags.u++;
                 break;
 
+
             case 'p':
+                if (flags.p)
+                    print_error(ERR_DUPL);
                 args.port = validated_number(optarg, true);
                 printf("option p with value '%d'\n", args.port);
                 break;
 
             case 'w':
+                if (flags.w)
+                    print_error(ERR_DUPL);
                 args.wait = validated_number(optarg, false);
                 printf("option w with value '%d'\n", args.wait);
+                flags.w++;
                 break;
 
             case '?':
@@ -117,8 +151,7 @@ void cli_parser(int count, char *argument[]) {
             printf("%s ", argument[optind++]);
         printf("\n");
 
-        print_usage();
-        exit(ERR_ARG);
+        print_error(ERR_HELP);
     }
 
 

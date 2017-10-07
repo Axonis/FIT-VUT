@@ -12,19 +12,33 @@
 #include <getopt.h>
 #include <ctype.h>
 
-#define ERR_ARG 1
+#define ERR_HELP 0
+#define ERR_PORT 1
+#define ERR_WAIT 2
+#define ERR_DUPL 3
 
 
 void cli_parser(int count, char *argument[]);
-void print_usage();
-int validated_number(char* input, bool type);
+
+void print_error(int error);
+
+int validated_number(char *input, bool type);
 
 struct cli_arguments {
-    bool help;
-    char* interface;
+    char *interface;
     bool tcp;
     bool udp;
     int port;
     int wait;
-    char* network;
+    char *network;
 } args;
+
+struct cli_duplicite_flags {
+    int h;
+    int i;
+    int n;
+    int t;
+    int u;
+    int p;
+    int w;
+} flags;
