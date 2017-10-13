@@ -18,6 +18,10 @@
 #define ERR_WAIT 2
 #define ERR_DUPL 3
 #define ERR_NETW 4
+#define ERR_SOPT 5
+#define ERR_SOCK 6
+#define ERR_GAIN 7
+#define ERR_SEND 8
 
 #define PORT_CHECK 100
 #define MASK_CHECK 101
@@ -32,6 +36,8 @@ void print_error(int error);
 int validated_number(char *input, int type);
 
 void network_separator();
+
+int udp(char* ip, char* port);
 
 struct cli_arguments {
     char *interface;
@@ -52,3 +58,40 @@ struct cli_duplicite_flags {
     int p;
     int w;
 } flags;
+
+
+
+struct addrinfo hints;              /* Hints for gedaddrinfo */
+struct addrinfo *res;               /* Ouput for getaddrinfo */
+struct timeval timeout;             /* Timeout for select */
+struct msghdr msg;                  /* Recieved MSG */
+
+int sock = 0;           /* Return value of socket() */
+int set1 = 0;           /* Return value of setsockopt() */
+int set2 = 0;           /* Return value of setsockopt() */
+int on = 1;             /* Auxiliary variable to fill structures correctly */
+fd_set fds;             /* Auxiliary variable to fill structures correctl*/
+
+struct sock_extended_err {
+    __u32 ee_errno;
+    __u8 ee_origin;
+    __u8 ee_type;
+    __u8 ee_code;
+    __u8 ee_pad;
+    __u32 ee_info;
+    __u32 ee_data;
+} *sock_err;
+
+struct sockaddr_storage storage;     /* Universal socket for msg */
+struct addrinfo hints;              /* Hints for gedaddrinfo */
+struct addrinfo *res;               /* Ouput for getaddrinfo */
+struct timeval timeout;             /* Timeout for select */
+struct iovec iov;                   /* IO for ICMP header */
+struct msghdr msg;                  /* Recieved MSG, contains multiple cmsg */
+struct cmsghdr *cmsg;               /* Single cmsg */
+struct icmphdr *icmph;              /* ICMP header */
+ssize_t rcv = 0;        /* Auxiliary variable to check output of select() */
+
+#define SO_EE_ORIGIN_ICMP           2
+
+char buffer[512];       /* Buffer for control msg */
