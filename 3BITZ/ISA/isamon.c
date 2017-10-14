@@ -1,20 +1,131 @@
+
 #include "isamon.h"
 
+char *hosts[] = {};
+char *interface[] = {};
 
 int main(int argc, char *argv[]) {
 
+
+    args.wait = 500000;
     cli_parser(argc, argv);
     //Set up a socket to use.
     int socket = get_socket();
 
+    list_interfaces();
+
     //start scanning
-    start_scan(socket, args.ip, 80, 80);
+    //start_scan(socket, args.ip, 80, 80);
+    ping(args.ip);
+    udp(args.ip, "33456");
 
+
+    struct sockaddr_in b_ip;
+    struct sockaddr_in b_sub;
+    struct sockaddr_in b_net;
+    char *kebab;
+    char *s_mask;
+
+    // IP V BINARKE
+    inet_aton(args.ip, &b_ip.sin_addr);
+
+    kebab = inet_ntoa(b_ip.sin_addr); // return the IP
+    printf("%s\n", kebab); // prints "10.0.0.1"
+
+    int cidrMask = 23;
+    long bits = 0;
+    bits = 0xffffffff ^ (1 << 32 - cidrMask) - 1;
+    int mask[3];
+    mask[0] = (bits & 0x0000000000ff000000L) >> 24;
+    mask[1] = (bits & 0x0000000000ff0000) >> 16;
+    mask[2] = (bits & 0x0000000000ff00) >> 8;
+    mask[3] = bits & 0xff;
+    printf("%d.%d.%d.%d\n", mask[0], mask[1], mask[2], mask[3]);
+    //sprintf(s_mask,"%d.%d.%d.%d", mask[0], mask[1], mask[2], mask[3]);
     /*
-     * TODO INTERFACE LIST */
+    network = ip & subnet;
+    broadcast = ip | ~subnet;
+    první IP = network+1, poslední broadcast-1*/
 
-    printf("Is ip alive ? : %d\n", udp(args.ip, "33456"));
     printf("Mask %d\n", args.mask);
+
+}
+
+
+void ping(char *host_ip) {
+
+    int sock;
+    struct icmp hdr;
+    struct sockaddr_in addr;
+    struct ifreq ifr;
+
+    ssize_t n;
+    int i = 0;
+
+    char buf[512];
+    struct icmp *icmphdrptr;
+    struct ip *iphdrptr;
+
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr(host_ip);
+
+    sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    if (sock < 0)
+        print_error(ERR_SOCK);
+
+
+    memset(&ifr, 0, sizeof(ifr));
+    snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "wlp7s0");
+    if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, (void *) &ifr, sizeof(ifr)) < 0) {
+        print_error(ERR_SOCK);
+    }
+
+
+    memset(&hdr, 0, sizeof(hdr));
+
+
+    hdr.icmp_type = ICMP_ECHO;
+    hdr.icmp_code = 0;
+
+    hdr.icmp_cksum = checksum((unsigned short *) &hdr, sizeof(hdr));
+
+    FD_ZERO(&fds);
+    FD_SET(sock, &fds);
+
+    /* Set timeout to 0.5 second */
+    timeout.tv_usec = args.wait;
+
+    /* Wait for answer, if it comes in 0.5 second receive it */
+
+
+    n = sendto(sock, (char *) &hdr, sizeof(hdr), 0, (struct sockaddr *) &addr, sizeof(addr));
+    if (n < 1)
+        print_error(ERR_SEND);
+
+
+    int rdy = select(sock + 1, &fds, NULL, NULL, &timeout);
+
+    if (rdy == 1) {
+
+        n = recv(sock, buf, sizeof(buf), 0);
+        if (n < 1)
+            print_error(ERR_SOCK);
+
+        iphdrptr = (struct iphdr *) buf;
+        icmphdrptr = (struct icmphdr *) (buf + (iphdrptr->ip_hl * 4));
+
+        if (icmphdrptr->icmp_type == ICMP_ECHOREPLY) {
+            printf("received ICMP ECHO REPLY from %s\n", host_ip);
+            hosts[i] = host_ip;
+        } else {
+            printf("received ICMP %d\n", icmphdrptr->icmp_type);
+        }
+        i++;
+    } else
+        printf("nope\n");
+
+    close(sock);
 
 }
 
@@ -54,7 +165,7 @@ int udp(char *ip, char *port) {
         msg.msg_controllen = sizeof(buffer);
 
         /* Set timeout to 0.5 second */
-        timeout.tv_usec = 500000;
+        timeout.tv_usec = args.wait;
 
         /* Wait for answer, if it comes in 0.5 second receive it */
         int rdy = select(sock + 1, &fds, NULL, NULL, &timeout);
@@ -64,6 +175,7 @@ int udp(char *ip, char *port) {
 
             if (rcv >= 0) {
                 /* Loop through all control headers */
+                /* Loop through all control headers */
                 for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
                     /* Filling sock_err from header */
                     sock_err = (struct sock_extended_err *) CMSG_DATA(cmsg);
@@ -71,7 +183,6 @@ int udp(char *ip, char *port) {
                     if (cmsg->cmsg_type == IP_RECVERR && cmsg->cmsg_level == SOL_IP) {
 
                         if (sock_err && sock_err->ee_origin == SO_EE_ORIGIN_ICMP) {
-
                             /* If destination is unreachable */
                             if ((sock_err->ee_type == ICMP_DEST_UNREACH)) {
                                 printf("ICMP_DEST_UNREACH\n\n");
@@ -146,8 +257,22 @@ void start_scan(int socketfd, char *host, int start_port, int end_port) {
 
 }
 
-void cli_parser(int count, char *argument[]) {
+void list_interfaces() {
+    struct ifaddrs *ifaddr, *ifa;
+    int i = 0;
 
+    if (getifaddrs(&ifaddr) == -1) {
+        print_error(ERR_GAIN);
+    }
+
+    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr->sa_family == AF_INET) {
+            interface[i] = ifa->ifa_name;
+        }
+    }
+}
+
+void cli_parser(int count, char *argument[]) {
 
     if (count < 2)
         print_error(ERR_HELP);
@@ -267,6 +392,25 @@ void network_separator() {
     }
 }
 
+unsigned short checksum(unsigned short *buff, int size) {
+    unsigned long sum = 0;
+
+    while (size > 1) {
+        sum += *buff;
+        buff++;
+        size -= 2;
+    }
+
+    if (size == 1) {
+        sum += *(unsigned char *) buff;
+    }
+
+    sum = (sum & 0xffff) + (sum >> 16);
+    sum = (sum & 0xffff) + (sum >> 16);
+
+    return ~sum;
+}
+
 int validated_number(char *input, int type) {
     char *ptr = NULL;
     long tmp;
@@ -279,8 +423,11 @@ int validated_number(char *input, int type) {
         if (type == PORT_CHECK && (tmp > 65535 || tmp < 0))
             print_error(ERR_PORT);
 
-        if (type == TIME_CHECK && (tmp > 5000 || tmp < 0))
-            print_error(ERR_WAIT);
+        if (type == TIME_CHECK)
+            if (tmp > 5000 || tmp < 0)
+                print_error(ERR_WAIT);
+            else
+                tmp = tmp * 1000;
     } else {
         struct sockaddr_in sa;
         // returns 1 on success, 0 if input is not valid IP

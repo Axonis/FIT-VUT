@@ -6,22 +6,28 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <linux/icmp.h>
-#include <netinet/icmp6.h>
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <net/if.h>
+#include <netinet/ip_icmp.h>
+#include <string.h>
+#include <ifaddrs.h>
+#include <string.h>
 
-#define ERR_HELP 0
-#define ERR_PORT 1
-#define ERR_WAIT 2
-#define ERR_DUPL 3
-#define ERR_NETW 4
-#define ERR_SOPT 5
-#define ERR_SOCK 6
-#define ERR_GAIN 7
-#define ERR_SEND 8
+enum error_codes {
+    ERR_HELP,
+    ERR_PORT,
+    ERR_WAIT,
+    ERR_DUPL,
+    ERR_NETW,
+    ERR_SOPT,
+    ERR_SOCK,
+    ERR_GAIN,
+    ERR_SEND
+};
+
 
 #define PORT_CHECK 100
 #define MASK_CHECK 101
@@ -37,7 +43,13 @@ int validated_number(char *input, int type);
 
 void network_separator();
 
+void ping(char* host_ip);
+void list_interfaces();
+
+unsigned short checksum(unsigned short *buff, int size);
+
 int udp(char* ip, char* port);
+
 
 struct cli_arguments {
     char *interface;
@@ -72,15 +84,8 @@ int set2 = 0;           /* Return value of setsockopt() */
 int on = 1;             /* Auxiliary variable to fill structures correctly */
 fd_set fds;             /* Auxiliary variable to fill structures correctl*/
 
-struct sock_extended_err {
-    __u32 ee_errno;
-    __u8 ee_origin;
-    __u8 ee_type;
-    __u8 ee_code;
-    __u8 ee_pad;
-    __u32 ee_info;
-    __u32 ee_data;
-} *sock_err;
+
+
 
 struct sockaddr_storage storage;     /* Universal socket for msg */
 struct addrinfo hints;              /* Hints for gedaddrinfo */
@@ -93,5 +98,11 @@ struct icmphdr *icmph;              /* ICMP header */
 ssize_t rcv = 0;        /* Auxiliary variable to check output of select() */
 
 #define SO_EE_ORIGIN_ICMP           2
+
+struct sock_extended_err {
+    unsigned char ee_origin;
+    unsigned char ee_type;
+
+} *sock_err;
 
 char buffer[512];       /* Buffer for control msg */
