@@ -1,8 +1,31 @@
 
 #include "isamon.h"
+#include <sys/ioctl.h>
+#include "netpacket/packet.h"
+#include "net/ethernet.h"
+#include "net/if_arp.h"
 
-char *hosts[] = {};
+
+char *hosts[128];
 char *interface[] = {};
+
+int get_socket();
+
+void arp();
+void ip_convertor();
+
+struct arp_packet {
+    struct ether_header ether;      // Ethernet Header
+    struct arphdr arp;              // ARP Header
+
+    uint8_t sender_mac[ETH_ALEN];
+    uint32_t sender_ip;
+    uint8_t target_mac[ETH_ALEN];
+    uint32_t target_ip;
+
+    uint8_t padding[18];           // Paddign
+} __attribute__ ((__packed__));
+
 
 int main(int argc, char *argv[]) {
 
@@ -12,44 +35,215 @@ int main(int argc, char *argv[]) {
     //Set up a socket to use.
     int socket = get_socket();
 
+    /*if interface is not set scan all*/
     list_interfaces();
 
     //start scanning
     //start_scan(socket, args.ip, 80, 80);
-    ping(args.ip);
-    udp(args.ip, "33456");
+    //ping(args.ip);
+    //udp(args.ip, "33456");
+
+    //arp();
+    ip_convertor();
+}
+
+void arp() {
 
 
-    struct sockaddr_in b_ip;
-    struct sockaddr_in b_sub;
-    struct sockaddr_in b_net;
-    char *kebab;
-    char *s_mask;
+    int arp_fd, if_fd;
+    ssize_t tmp;
+    struct ifreq ifr;
+    uint32_t own_ip;
+    int if_index;
 
-    // IP V BINARKE
-    inet_aton(args.ip, &b_ip.sin_addr);
 
-    kebab = inet_ntoa(b_ip.sin_addr); // return the IP
-    printf("%s\n", kebab); // prints "10.0.0.1"
+    if_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (if_fd < 0)
+        print_error(ERR_SOCK);
 
-    int cidrMask = 23;
+    // get own IP address
+    memcpy(ifr.ifr_name, interface[0], IF_NAMESIZE);
+    tmp = ioctl(if_fd, SIOCGIFADDR, &ifr, sizeof(ifr));
+    if (tmp < 0) {
+        perror("SIOCGIFADDR");
+        exit(1);
+    }
+    struct sockaddr_in *sin = (struct sockaddr_in *) &ifr.ifr_addr;
+    own_ip = ntohl(sin->sin_addr.s_addr);
+
+
+    // get index of interface (e.g. eth0 -> 1)
+    tmp = ioctl(if_fd, SIOCGIFINDEX, &ifr, sizeof(ifr));
+    if (tmp < 0) {
+        perror("IOCTL");
+        exit(1);
+    }
+    if_index = ifr.ifr_ifindex;
+
+
+    // get own MAC address
+    tmp = ioctl(if_fd, SIOCGIFHWADDR, &ifr, sizeof(ifr));
+    if (tmp < 0) {
+        perror("IOCTL");
+        exit(1);
+    }
+
+    close(if_fd);
+
+
+
+
+    // Socket to send ARP packet
+    arp_fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
+    if (arp_fd == -1)
+        print_error(ERR_SOCK);
+
+    struct arp_packet pkt;
+    memset(pkt.ether.ether_dhost, 0xFF, sizeof(pkt.ether.ether_dhost)); // destination broadcast
+    memcpy(pkt.ether.ether_shost, ifr.ifr_hwaddr.sa_data, sizeof(pkt.ether.ether_dhost)); // source local interface
+    pkt.ether.ether_type = htons(ETHERTYPE_ARP);
+
+    pkt.arp.ar_hrd = htons(ARPHRD_ETHER);
+    pkt.arp.ar_pro = htons(ETHERTYPE_IP);
+    pkt.arp.ar_hln = ETHER_ADDR_LEN;
+    pkt.arp.ar_pln = sizeof(pkt.sender_ip);
+    pkt.arp.ar_op = htons(ARPOP_REQUEST);
+
+    memcpy(pkt.sender_mac, ifr.ifr_hwaddr.sa_data, sizeof(pkt.sender_mac));
+    pkt.sender_ip = htonl(own_ip);
+    memset(pkt.target_mac, 0, sizeof(pkt.target_mac));
+    pkt.target_ip = inet_addr(args.ip);
+
+    memset(pkt.padding, 0, sizeof(pkt.padding));
+
+
+    struct sockaddr_ll sa;
+    sa.sll_family = AF_PACKET;
+    sa.sll_protocol = htons(ETH_P_ARP);
+    sa.sll_ifindex = if_index;
+    sa.sll_hatype = ARPHRD_ETHER;
+    sa.sll_pkttype = PACKET_BROADCAST;
+    sa.sll_halen = 0;
+    // sa.sll_addr not set
+
+
+    tmp = sendto(arp_fd, &pkt, sizeof(pkt), 0, (struct sockaddr *) &sa, sizeof(sa));
+    if (tmp < 0)
+        print_error(ERR_SEND);
+
+    tmp = recvfrom(arp_fd, &pkt, sizeof(pkt), 0, NULL, NULL);
+    if (tmp == -1)
+        print_error(ERR_SEND);
+    else {
+        struct in_addr ip_addr;
+        ip_addr.s_addr = pkt.sender_ip;
+        printf("The IP address is %s\n", inet_ntoa(ip_addr));
+    }
+    close(arp_fd);
+
+}
+
+void string_to_octet(int ip[4],char *addr) {
+
+    char *tmp;
+    char *aux;
+    strcpy(aux, addr);
+
+    tmp = strtok(aux, ".");
+    ip[0] = atoi(tmp);
+
+    tmp = strtok(NULL, ".");
+    ip[1] = atoi(tmp);
+
+    tmp = strtok(NULL, ".");
+    ip[2] = atoi(tmp);
+
+    tmp = strtok(NULL, " ");
+    ip[3] = atoi(tmp);
+
+}
+
+
+void ip_convertor() {
+
+    char s_mask[128];
     long bits = 0;
-    bits = 0xffffffff ^ (1 << 32 - cidrMask) - 1;
-    int mask[3];
-    mask[0] = (bits & 0x0000000000ff000000L) >> 24;
+    unsigned int iterator;
+    int ip_start[4];
+    int ip_end[4];
+    struct in_addr struct_host, struct_mask, broadcast;
+    char broadcast_address[INET_ADDRSTRLEN];
+    bits = 0xffffffff ^ (1 << 32 - args.mask) - 1;
+    int mask[4];
+
+    mask[0] = (bits & 0x0000000000ff000000) >> 24;
     mask[1] = (bits & 0x0000000000ff0000) >> 16;
     mask[2] = (bits & 0x0000000000ff00) >> 8;
     mask[3] = bits & 0xff;
-    printf("%d.%d.%d.%d\n", mask[0], mask[1], mask[2], mask[3]);
-    //sprintf(s_mask,"%d.%d.%d.%d", mask[0], mask[1], mask[2], mask[3]);
-    /*
-    network = ip & subnet;
-    broadcast = ip | ~subnet;
-    první IP = network+1, poslední broadcast-1*/
 
-    printf("Mask %d\n", args.mask);
+    sprintf(s_mask,"%d.%d.%d.%d", mask[0], mask[1], mask[2], mask[3]);
+
+
+    if (inet_pton(AF_INET, args.ip, &struct_host) == 1 &&
+        inet_pton(AF_INET, s_mask, &struct_mask) == 1)
+        broadcast.s_addr = struct_host.s_addr | ~struct_mask.s_addr;
+    else
+        print_error(ERR_NETW);
+
+
+
+    if (inet_ntop(AF_INET, &broadcast, broadcast_address, INET_ADDRSTRLEN) != NULL)
+        printf("Broadcast address of %s with netmask %s is %s\n",
+               args.ip, s_mask, broadcast_address);
+    else
+        print_error(ERR_NETW);
+
+    if(strcmp(args.ip, broadcast_address) == 0)
+        return;
+
+    string_to_octet(ip_start, args.ip);
+    string_to_octet(ip_end, broadcast_address);
+
+    for (int i = 0; i < 4; i++) {
+        printf("%d.", ip_start[i] & mask[i]);
+        if (ip_start[i] == (ip_start[i] & mask[i]))
+            ;
+        else
+            ;//print_error(ERR_NETW);
+    }
+
+
+    int start_ip= (
+            ip_start[0] << 24 |
+            ip_start[1] << 16 |
+            ip_start[2] << 8 |
+            ip_start[3]);
+
+    int end_ip= (
+            ip_end[0] << 24 |
+            ip_end[1] << 16 |
+            ip_end[2] << 8 |
+            ip_end[3]);
+
+    int i = 0;
+
+    for (iterator=start_ip; iterator < end_ip; iterator++)
+    {
+        sprintf (s_mask," %d.%d.%d.%d\n",
+                (iterator & 0xFF000000)>>24,
+                (iterator & 0x00FF0000)>>16,
+                (iterator & 0x0000FF00)>>8,
+                (iterator & 0x000000FF)
+        );
+        //hosts[i] = s_mask;
+        printf("%s", s_mask);
+        i++;
+    }
+    printf("Number of hosts: %d\n", i);
+
 
 }
+
 
 
 void ping(char *host_ip) {
@@ -63,8 +257,8 @@ void ping(char *host_ip) {
     int i = 0;
 
     char buf[512];
-    struct icmp *icmphdrptr;
-    struct ip *iphdrptr;
+    struct icmphdr *icmphdrptr;
+    struct iphdr *iphdrptr;
 
 
     addr.sin_family = AF_INET;
@@ -75,12 +269,13 @@ void ping(char *host_ip) {
         print_error(ERR_SOCK);
 
 
-    memset(&ifr, 0, sizeof(ifr));
-    snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "wlp7s0");
-    if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, (void *) &ifr, sizeof(ifr)) < 0) {
-        print_error(ERR_SOCK);
+    if (args.interface != NULL) {
+        memset(&ifr, 0, sizeof(ifr));
+        snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "wlp7s0");
+        if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, (void *) &ifr, sizeof(ifr)) < 0) {
+            print_error(ERR_SOCK);
+        }
     }
-
 
     memset(&hdr, 0, sizeof(hdr));
 
@@ -113,13 +308,13 @@ void ping(char *host_ip) {
             print_error(ERR_SOCK);
 
         iphdrptr = (struct iphdr *) buf;
-        icmphdrptr = (struct icmphdr *) (buf + (iphdrptr->ip_hl * 4));
+        icmphdrptr = (struct icmphdr *) (buf + (iphdrptr->ihl * 4));
 
-        if (icmphdrptr->icmp_type == ICMP_ECHOREPLY) {
+        if (icmphdrptr->type == ICMP_ECHOREPLY) {
             printf("received ICMP ECHO REPLY from %s\n", host_ip);
             hosts[i] = host_ip;
         } else {
-            printf("received ICMP %d\n", icmphdrptr->icmp_type);
+            printf("received ICMP %d\n", icmphdrptr->type);
         }
         i++;
     } else
@@ -259,6 +454,7 @@ void start_scan(int socketfd, char *host, int start_port, int end_port) {
 
 void list_interfaces() {
     struct ifaddrs *ifaddr, *ifa;
+    struct sockaddr_in *sa;
     int i = 0;
 
     if (getifaddrs(&ifaddr) == -1) {
@@ -268,6 +464,9 @@ void list_interfaces() {
     for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr->sa_family == AF_INET) {
             interface[i] = ifa->ifa_name;
+            sa = (struct sockaddr_in *) ifa->ifa_addr;
+            hosts[i] = inet_ntoa(sa->sin_addr);
+            printf("Interface: %s\tAddress: %s\n", interface[i], hosts[i]);
         }
     }
 }

@@ -43,12 +43,13 @@ int validated_number(char *input, int type);
 
 void network_separator();
 
-void ping(char* host_ip);
+void ping(char *host_ip);
+
 void list_interfaces();
 
 unsigned short checksum(unsigned short *buff, int size);
 
-int udp(char* ip, char* port);
+int udp(char *ip, char *port);
 
 
 struct cli_arguments {
@@ -58,7 +59,7 @@ struct cli_arguments {
     int port;
     int wait;
     char *network;
-    char* ip;
+    char *ip;
     int mask;
 } args;
 
@@ -70,7 +71,6 @@ struct cli_duplicite_flags {
     int p;
     int w;
 } flags;
-
 
 
 struct addrinfo hints;              /* Hints for gedaddrinfo */
