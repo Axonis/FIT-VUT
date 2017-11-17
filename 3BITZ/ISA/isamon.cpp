@@ -1,297 +1,310 @@
 #include "isamon.h"
-#include <netinet/tcp.h>
-#include <thread>
 
 using namespace std;
-
-void tcp_recieve(string addr);
-
-void udp(string ip, char* port);
 
 
 int main(int argc, char *argv[]) {
 
     cli_parser(argc, argv);
     interface_info();
-
-
-    /*thread send (tcp, args.ip);
-    thread recieve (tcp_recieve, args.ip);
-
-    send.join();
-    recieve.join();*/
-
-    //udp(args.ip);
-
     hosts();
 
+    thread send_icmp(icmp_send);
+    thread recieve_icmp(icmp_recieve);
 
-    args.wait = 50000;
+    send_icmp.join();
+    recieve_icmp.join();
 
-    /*for(int i=0; i<ip_hosts.size(); ++i) {
-        ping(ip_hosts[i]);
-        arp(ip_hosts[i], interface[1]);
-    }
+    /*thread send_arp(arp_send, interface[1]);
+    thread recieve_arp(arp_recieve);
 
-    for(int i=0; i<num_of_if; i++)
-        cout << interface[i].mask << endl;*/
+    send_arp.join();
+    recieve_arp.join();*/
 
+    if (args.tcp)
+        for (int i = 0; i < ip_active.size(); ++i) {
+            thread send(tcp_send, ip_active[i]);
+            thread recieve(tcp_recieve);
+
+            send.join();
+            recieve.join();
+        }
+
+    if (args.udp)
+        for (int i = 0; i < ip_active.size(); ++i) {
+            thread send(udp_send, ip_active[i]);
+            thread recieve(udp_recieve);
+
+            send.join();
+            recieve.join();
+        }
 
     return 0;
 }
 
-
-void udp(string ip, char *port) {
-
-    int ttl = 64;
-    sock = socket(AF_INET, SOCK_DGRAM, 0);
-    set1 = setsockopt(sock, SOL_IP, IP_RECVERR, (char *) &on, sizeof(on));
-    set2 = setsockopt(sock, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl));
-
-    if (getaddrinfo(ip.c_str(), port, &hints, &res) != 0)
-        print_error(ERR_GAIN);
-
-    if (sock < 0)
-        print_error(ERR_SOCK);
-
-    if (set1 != 0 || set2 != 0)
-        print_error(ERR_SOPT);
-
-
-    if (sendto(sock, 0, 0, 0, res->ai_addr, res->ai_addrlen) == 0) {
-        /* Structure setup for select */
-        FD_ZERO(&fds);
-        FD_SET(sock, &fds);
-
-        iov.iov_base = &icmph;              /* ICMP Header */
-        iov.iov_len = sizeof(icmph);
-        msg.msg_name = &storage;            /* Address target */
-        msg.msg_namelen = sizeof(storage);
-        msg.msg_iov = &iov;                 /* ICMP header to msg */
-        msg.msg_iovlen = 1;                 /* Number of headers */
-        msg.msg_flags = 0;                  /* No flags */
-        msg.msg_control = buffer;           /* Buffer for control msg */
-        msg.msg_controllen = sizeof(buffer);
-
-        /* Set timeout to 0.5 second */
-        timeout.tv_usec = args.wait;
-
-        rcv = recvmsg(sock, &msg, MSG_ERRQUEUE);
-
-        if (rcv >= 0) {
-            /* Loop through all control headers */
-            /* Loop through all control headers */
-            for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-                /* Filling sock_err from header */
-                sock_err = (struct sock_extended_err *) CMSG_DATA(cmsg);
-
-                if (cmsg->cmsg_type == IP_RECVERR && cmsg->cmsg_level == SOL_IP) {
-
-                    if (sock_err && sock_err->ee_origin == SO_EE_ORIGIN_ICMP) {
-                        /* If destination is unreachable */
-                        if ((sock_err->ee_type == ICMP_DEST_UNREACH)) {
-                            printf("ICMP_DEST_UNREACH\n\n");
-                        }
-                    }
-                }
-
-
-            }
-
-
-            close(sock);
-            return;
-
-            /* Select is not ready to read - timeout */
-        }
-    }
-
-    else {
-        print_error(ERR_SEND);
-    }
-}
-
-struct pseudoTCPPacket {
-    uint32_t srcAddr;
-    uint32_t dstAddr;
-    uint8_t zero;
-    uint8_t protocol;
-    uint16_t TCP_len;
-};
-
-void tcp(string address) {
+void udp_send(string ip_addr) {
 
     int sock;
-    int one = 1;
+    int tmp = 1;
 
     int first;        // Prvy scannovany port
     int last;        // Posledny scannovany port
 
-    int open_port;    // Otvoreny port (pre vypis)
-
-    char *data;
-    char *pseudo_packet;
-    char buffer[4096];
+    char *full_packet;
 
     struct iphdr *ip;
-    struct tcphdr *tcp;
+    struct udphdr *udp;
 
-    struct pseudoTCPPacket pTCPPacket;
+    struct L4_packet packet;
     struct sockaddr_in addr;
 
-    uint32_t init_seq = 1138083240;
+    uint32_t init_seq = 1234567890;
 
-    /* Vytvorenie socketu */
-    if ((sock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP)) < 0) {
+    if ((sock = socket(PF_INET, SOCK_RAW, IPPROTO_UDP)) < 0)
         print_error(ERR_SOCK);
-    }
 
-    /* Nastavenie socketu */
-    if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char *) &one, sizeof(one)) < 0) {
+    if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char *) &tmp, sizeof(tmp)) < 0)
         print_error(ERR_SOCK);
-    }
 
-    /* Nastavenie socketu na neblokujuci */
-    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0) {
+    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
-    }
 
-    /* Kontrola, ci bol zadany parameter --port */
     if (flags.p == 1) {
         first = args.port;
         last = args.port;
     } else {
         first = 1; //first_port;
-        last = 65535; //last_port;
+        last = 100; //last_port;
     }
 
 
     /* Rozposlanie tcp syn sprav vsetkym pozadovanym portom */
     for (int port = first; port <= last; port++) {
 
-        //thread recieve (tcp_recieve, address);
-
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
-        addr.sin_addr.s_addr = inet_addr(address.c_str());
+        addr.sin_addr.s_addr = inet_addr(ip_addr.c_str());
 
         memset(buffer, 0, sizeof(buffer));
         ip = (struct iphdr *) buffer;
-        tcp = (struct tcphdr *) (buffer + sizeof(struct iphdr));
-        data = (char *) (buffer + sizeof(struct iphdr) + sizeof(struct tcphdr));
-        strcpy(data, "datastring");
+        udp = (struct udphdr *) (buffer + sizeof(struct iphdr));
 
-        /* Struktura IP */
+        // L3
         ip->ihl = 5;
         ip->version = 4;
-        ip->tos = 0;
-        ip->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data);
-        ip->id = htons(54321);
-        ip->frag_off = 0x00;
-        ip->ttl = 0xFF;
-        ip->protocol = IPPROTO_TCP;
-        ip->check = 0; // Done by kernel
-        ip->saddr = inet_addr(interface[1].ip_addr.c_str());
-        ip->daddr = inet_addr(address.c_str());
+        ip->tot_len = sizeof(struct iphdr) + sizeof(struct udphdr);
+        ip->id = htons(MAGIC_PORT);
+        ip->ttl = 64;
+        ip->protocol = IPPROTO_UDP;
+        ip->check = 0;
+        ip->saddr = inet_addr(interface[interface_to_scan].ip_addr.c_str());
+        ip->daddr = inet_addr(ip_addr.c_str());
         ip->check = checksum((unsigned short *) buffer, ip->tot_len);
 
-        /* Struktura TCP */
-        tcp->source = htons(30001);
-        tcp->dest = htons(port);
-        tcp->seq = htonl(init_seq);
-        tcp->ack_seq = 0x0;
-        tcp->doff = 5;
-        tcp->res1 = 0;
-        tcp->urg = 0;
-        tcp->ack = 0;
-        tcp->psh = 0;
-        tcp->rst = 0;
-        tcp->syn = 1;    // Nastavenie iba priznaku SYN, aby nemusel prebiehat cely 3-way handshake. Budem cakat na SYN+ACK
-        tcp->fin = 0;
-        // tcp->th_flags = TH_SYN;
-        // tcp->th_seq = htonl(23456);
-        // tcp->window = htons(155);  //0xFFFF
-        tcp->check = 0;
-        tcp->urg_ptr = 0;
+        // L4
+        udp->source = htons(MAGIC_PORT);
+        udp->dest = htons(port);
+        udp->len = htons(sizeof(struct udphdr));
 
-        pTCPPacket.srcAddr = inet_addr(interface[1].ip_addr.c_str());
-        pTCPPacket.dstAddr = inet_addr(address.c_str());
-        pTCPPacket.zero = 0;
-        pTCPPacket.protocol = IPPROTO_TCP;
-        pTCPPacket.TCP_len = htons(sizeof(struct tcphdr) + strlen(data));
+        packet.ip_src = inet_addr(interface[interface_to_scan].ip_addr.c_str());
+        packet.ip_dst = inet_addr(ip_addr.c_str());
+        packet.zero = 0;
+        packet.protocol = IPPROTO_UDP;
+        packet.length = htons(sizeof(struct udphdr));
 
-        pseudo_packet = (char *) malloc((int) (sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + strlen(data)));
-        memset(pseudo_packet, 0, sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + strlen(data));
+        full_packet = (char *) malloc((int) (sizeof(struct L4_packet) + sizeof(struct udphdr)));
 
-        memcpy(pseudo_packet, (char *) &pTCPPacket, sizeof(struct pseudoTCPPacket));
+        memset(full_packet, 0, sizeof(struct L4_packet) + sizeof(struct udphdr));
 
-        memcpy(pseudo_packet + sizeof(struct pseudoTCPPacket), tcp, sizeof(struct tcphdr) + strlen(data));
+        memcpy(full_packet, (char *) &packet, sizeof(struct L4_packet));
 
-        tcp->check = (checksum((unsigned short *) pseudo_packet,
-                               (int) (sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + strlen(data))));
+        memcpy(full_packet + sizeof(struct L4_packet), udp, sizeof(struct udphdr));
 
+        udp->check = (checksum((unsigned short *) full_packet,
+                               (int) (sizeof(struct L4_packet) + sizeof(struct udphdr))));
 
         if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0) {
             print_error(ERR_SEND);
         }
-        usleep(50);
+        usleep(30);
     }
-
-    int i = 0;
-
-    /*while (1){
-        i++;
-        char rbuffer[4096];
-        memset (rbuffer, 0, sizeof(rbuffer));
-        if ((recv(sock, rbuffer, sizeof(rbuffer), 0)) > 0) {
-            ip = (struct iphdr *) rbuffer;
-            tcp = (struct tcphdr *) (rbuffer + (ip->ihl * 4));
-            if (tcp->syn == 1) {
-                open_port = ntohs(tcp->source);
-                cout << address << " TCP " << open_port << endl;
-            }
-        }
-        if (i == 100000)
-            return;
-    }*/
-
 
     close(sock);
 }
 
-void tcp_recieve(string addr) {
-    struct timeval t1, t2;
+void udp_recieve() {
+    struct timeval start, end;
+    char str[INET_ADDRSTRLEN];
+    struct icmphdr *icmp;
+    struct iphdr *ip, *ip2;
+    struct udphdr *udp;
+    int sock;
+
+    if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
+        print_error(ERR_SOCK);
+
+    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
+        print_error(ERR_SOCK);
+
+    gettimeofday(&start, NULL);
+
+    while (true) {
+        gettimeofday(&end, NULL);
+        if (end.tv_sec - start.tv_sec > 1) {
+            close(sock);
+            return;
+        }
+        if (recv(sock, buffer, sizeof(buffer), 0) > 0) {
+            // https://stackoverflow.com/questions/47042355/access-udp-from-icmp-message
+            ip = (struct iphdr *) buffer;
+            icmp = (struct icmphdr *) (buffer + (ip->ihl * 4));
+            ip2 = (struct iphdr *) (icmp + 1);
+            udp = (struct udphdr *) (((uint8_t *) ip2) + (ip2->ihl * 4));
+
+            //cout << "From IP: " << inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN)  << " Port " << ntohs(udp->dest)  << " ICMP TYPE: " << (int)icmp->type << endl;
+
+            if (icmp->type != ICMP_PORT_UNREACH) {
+                cout << inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN) << " UPD " << ntohs(udp->dest) << endl;
+            }
+
+        }
+    }
+}
+
+void tcp_send(string ip_addr) {
+
+    int sock;
+    int tmp = 1;
+
+    int first;
+    int last;
+    char *full_packet;
+    char buffer[4096];
+
+    struct iphdr *ip;
+    struct tcphdr *tcp;
+
+    struct L4_packet packet;
+    struct sockaddr_in addr;
+
+    uint32_t init_seq = 1234567890;
+
+    if ((sock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP)) < 0)
+        print_error(ERR_SOCK);
+
+    if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char *) &tmp, sizeof(tmp)) < 0)
+        print_error(ERR_SOCK);
+
+    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
+        print_error(ERR_SOCK);
+
+    if (flags.p == 1) {
+        first = args.port;
+        last = args.port;
+    } else {
+        first = 1; //first_port;
+        last = 10000; //last_port;
+    }
+
+
+    for (int port = first; port <= last; port++) {
+
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        addr.sin_addr.s_addr = inet_addr(ip_addr.c_str());
+
+        memset(buffer, 0, sizeof(buffer));
+        ip = (struct iphdr *) buffer;
+        tcp = (struct tcphdr *) (buffer + sizeof(struct iphdr));
+
+        // L3
+        ip->ihl = 5;
+        ip->version = 4;
+        ip->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr);
+        ip->id = htons(MAGIC_PORT);
+        ip->ttl = 64;
+        ip->protocol = IPPROTO_TCP;
+        ip->check = 0;
+        ip->saddr = inet_addr(interface[interface_to_scan].ip_addr.c_str());
+        ip->daddr = inet_addr(ip_addr.c_str());
+        ip->check = checksum((unsigned short *) buffer, ip->tot_len);
+
+        // L4
+        tcp->source = htons(MAGIC_PORT);
+        tcp->dest = htons(port);
+        tcp->seq = htonl(init_seq);
+        tcp->ack_seq = 0x0;
+        tcp->doff = 5;
+        tcp->syn = 1;
+        tcp->check = 0;
+
+        packet.ip_src = inet_addr(interface[interface_to_scan].ip_addr.c_str());
+        packet.ip_dst = inet_addr(ip_addr.c_str());
+        packet.zero = 0;
+        packet.protocol = IPPROTO_TCP;
+        packet.length = htons(sizeof(struct tcphdr));
+
+        full_packet = (char *) malloc((int) (sizeof(struct L4_packet) + sizeof(struct tcphdr)));
+        memset(full_packet, 0, sizeof(struct L4_packet) + sizeof(struct tcphdr));
+
+        memcpy(full_packet, (char *) &packet, sizeof(struct L4_packet));
+
+        memcpy(full_packet + sizeof(struct L4_packet), tcp, sizeof(struct tcphdr));
+
+        tcp->check = (checksum((unsigned short *) full_packet,
+                               (int) (sizeof(struct L4_packet) + sizeof(struct tcphdr))));
+
+        /*if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0) {
+            print_error(ERR_SEND);
+        }*/
+
+        sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr));
+        usleep(30);
+    }
+
+    close(sock);
+}
+
+void tcp_recieve() {
+    struct timeval start, end;
     int open_port;
     int sock;
     struct iphdr *ip;
     struct tcphdr *tcp;
+    char buf[512];
+    char str[INET_ADDRSTRLEN];
 
-    /* Vytvorenie socketu */
-    if ((sock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP)) < 0) {
+    if ((sock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP)) < 0)
         print_error(ERR_SOCK);
-    }
 
-    /* Nastavenie socketu na neblokujuci */
-    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0) {
+    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
-    }
 
-    gettimeofday(&t1, NULL);
-    cout << "T1 SEC:" << t1.tv_sec << endl;
-    while (1) {
-        gettimeofday(&t2, NULL);
-        if (t2.tv_sec - t1.tv_sec >= 4) {
+
+    gettimeofday(&start, NULL);
+
+    while (true) {
+
+        gettimeofday(&end, NULL);
+        if (end.tv_sec - start.tv_sec >= 1) {
             close(sock);
             return;
         }
-        char rbuffer[4096];
-        memset(rbuffer, 0, sizeof(rbuffer));
-        if ((recv(sock, rbuffer, sizeof(rbuffer), 0)) > 0) {
-            ip = (struct iphdr *) rbuffer;
-            tcp = (struct tcphdr *) (rbuffer + (ip->ihl * 4));
+
+
+        memset(buffer, 0, sizeof(buffer));
+
+        if ((recv(sock, buffer, sizeof(buffer), 0)) > 0) {
+
+            ip = (struct iphdr *) buffer;
+            tcp = (struct tcphdr *) (buffer + (ip->ihl * 4));
+
             if (tcp->syn == 1) {
                 open_port = ntohs(tcp->source);
-                cout << addr << " TCP " << open_port << endl;
+                inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN);
+                if (open_port == MAGIC_PORT)
+                    continue;
+                cout << str << " TCP " << open_port << endl;
             }
         }
     }
@@ -299,109 +312,112 @@ void tcp_recieve(string addr) {
 
 }
 
-void ping(string host_ip) {
+void icmp_send() {
 
     int sock;
-    struct icmp hdr;
+    struct icmp icmp_packet;
     struct sockaddr_in addr;
     struct ifreq ifr;
 
-    ssize_t n;
-    int i = 0;
+    struct icmphdr *icmp;
+    struct iphdr *ip;
 
-    char buf[512];
-    struct icmphdr *icmphdrptr;
-    struct iphdr *iphdrptr;
+    if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
+        print_error(ERR_SOCK);
 
+    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
+        print_error(ERR_SOCK);
+
+
+    // Bind to interface
+    if (interface_to_scan >= 0) {
+        memset(&ifr, 0, sizeof(ifr));
+        snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), interface[interface_to_scan].name.c_str());
+        if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, (void *) &ifr, sizeof(ifr)) < 0)
+            print_error(ERR_SOCK);
+    }
 
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(host_ip.c_str());
-
-    sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (sock < 0)
-        print_error(ERR_SOCK);
+    memset(&icmp_packet, 0, sizeof(icmp_packet));
 
 
-    if (args.interface != NULL) {
-        memset(&ifr, 0, sizeof(ifr));
-        snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), interface[1].name.c_str());
-        if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, (void *) &ifr, sizeof(ifr)) < 0) {
-            print_error(ERR_SOCK);
-        }
+    for (int num_of_host = 0; num_of_host < ip_hosts.size(); num_of_host++) {
+
+        memset(&icmp_packet, 0, sizeof(icmp_packet));
+
+        addr.sin_addr.s_addr = inet_addr(ip_hosts[num_of_host].c_str());
+
+        icmp_packet.icmp_type = ICMP_ECHO;
+        icmp_packet.icmp_code = 0;
+        icmp_packet.icmp_cksum = checksum((unsigned short *) &icmp_packet, sizeof(icmp_packet));
+
+        if (sendto(sock, (char *) &icmp_packet, sizeof(icmp_packet), 0, (struct sockaddr *) &addr, sizeof(addr)) < 1)
+            print_error(ERR_SEND);
     }
-
-    memset(&hdr, 0, sizeof(hdr));
-
-
-    hdr.icmp_type = ICMP_ECHO;
-    hdr.icmp_code = 0;
-
-    hdr.icmp_cksum = checksum((unsigned short *) &hdr, sizeof(hdr));
-
-    FD_ZERO(&fds);
-    FD_SET(sock, &fds);
-
-    /* Set timeout to 0.5 second */
-    timeout.tv_usec = args.wait;
-
-    /* Wait for answer, if it comes in 0.5 second receive it */
-
-
-    n = sendto(sock, (char *) &hdr, sizeof(hdr), 0, (struct sockaddr *) &addr, sizeof(addr));
-    if (n < 1)
-        print_error(ERR_SEND);
-
-
-    int rdy = select(sock + 1, &fds, NULL, NULL, &timeout);
-
-    if (rdy == 1) {
-
-        n = recv(sock, buf, sizeof(buf), 0);
-        if (n < 1)
-            print_error(ERR_SOCK);
-
-        iphdrptr = (struct iphdr *) buf;
-        icmphdrptr = (struct icmphdr *) (buf + (iphdrptr->ihl * 4));
-
-        if (icmphdrptr->type == ICMP_ECHOREPLY) {
-            printf("%s\n", host_ip.c_str());
-            ip_active.emplace_back(host_ip);
-        } else;//printf("Received ICMP %d from %s\n", icmphdrptr->type, host_ip.c_str());
-
-    }
-
     close(sock);
-
 }
 
-void arp(string host_ip, if_info intf) {
+void icmp_recieve() {
+    char str[INET_ADDRSTRLEN];
 
+    int sock;
 
-    int arp_fd;
+    struct icmphdr *icmp;
+    struct iphdr *ip;
 
-    // Socket to send ARP packet
-    arp_fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
-    if (arp_fd == -1)
+    struct timeval start, end;
+
+    if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
         print_error(ERR_SOCK);
 
-    struct arp_packet pkt;
-    memset(pkt.ether.ether_dhost, 0xFF, sizeof(pkt.ether.ether_dhost)); // destination broadcast
-    memcpy(pkt.ether.ether_shost, intf.mac, sizeof(pkt.ether.ether_dhost)); // source local interface
-    pkt.ether.ether_type = htons(ETHERTYPE_ARP);
+    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
+        print_error(ERR_SOCK);
 
-    pkt.arp.ar_hrd = htons(ARPHRD_ETHER);
-    pkt.arp.ar_pro = htons(ETHERTYPE_IP);
-    pkt.arp.ar_hln = ETHER_ADDR_LEN;
-    pkt.arp.ar_pln = sizeof(pkt.sender_ip);
-    pkt.arp.ar_op = htons(ARPOP_REQUEST);
+    gettimeofday(&start, NULL);
 
-    memcpy(pkt.sender_mac, intf.mac, sizeof(pkt.sender_mac));
-    pkt.sender_ip = htonl(inet_addr(intf.ip_addr.c_str()));
-    memset(pkt.target_mac, 0, sizeof(pkt.target_mac));
-    pkt.target_ip = inet_addr(host_ip.c_str());
+    while (true) {
+        gettimeofday(&end, NULL);
+        if (end.tv_sec - start.tv_sec > 1) {
+            close(sock);
+            return;
+        }
+        if (recv(sock, buffer, sizeof(buffer), 0) > 0) {
 
-    memset(pkt.padding, 0, sizeof(pkt.padding));
+            ip = (struct iphdr *) buffer;
+            icmp = (struct icmphdr *) (buffer + (ip->ihl * 4));
 
+            if (icmp->type == ICMP_ECHOREPLY) {
+                cout << inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN) << endl;
+                ip_active.emplace_back(str);
+            }
+        }
+    }
+}
+
+void arp_send(if_info intf) {
+
+    int sock;
+
+    if ((sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ARP))) < 0)
+        print_error(ERR_SOCK);
+
+    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
+        print_error(ERR_SOCK);
+
+    struct arp_packet packet;
+    memset(packet.ether.ether_dhost, 0xFF, sizeof(packet.ether.ether_dhost)); // destination broadcast
+    memcpy(packet.ether.ether_shost, intf.mac, sizeof(packet.ether.ether_dhost)); // source local interface
+    packet.ether.ether_type = htons(ETHERTYPE_ARP);
+    packet.arp.ar_hrd = htons(ARPHRD_ETHER);
+    packet.arp.ar_pro = htons(ETHERTYPE_IP);
+    packet.arp.ar_hln = ETHER_ADDR_LEN;
+    packet.arp.ar_pln = sizeof(packet.src_ip);
+    packet.arp.ar_op = htons(ARPOP_REQUEST);
+
+    memcpy(packet.src_mac, intf.mac, sizeof(packet.src_mac));
+    packet.src_ip = htonl(intf.ip_bin);
+    memset(packet.dst_mac, 0, sizeof(packet.dst_mac));
+    memset(packet.padding, 0, sizeof(packet.padding));
 
     struct sockaddr_ll sa;
     sa.sll_family = AF_PACKET;
@@ -410,20 +426,50 @@ void arp(string host_ip, if_info intf) {
     sa.sll_hatype = ARPHRD_ETHER;
     sa.sll_pkttype = PACKET_BROADCAST;
     sa.sll_halen = 0;
-    // sa.sll_addr not set
 
 
-    if (sendto(arp_fd, &pkt, sizeof(pkt), 0, (struct sockaddr *) &sa, sizeof(sa)) < 0)
-        print_error(ERR_SEND);
+    for (int num_of_host = 0; num_of_host < ip_hosts.size(); num_of_host++) {
 
-    if (recvfrom(arp_fd, &pkt, sizeof(pkt), 0, NULL, NULL) == -1)
-        print_error(ERR_SEND);
-    else {
-        struct in_addr ip_addr;
-        ip_addr.s_addr = pkt.sender_ip;
-        printf("Got ARP reply from: %s\n", inet_ntoa(ip_addr));
+        packet.dst_ip = inet_addr(ip_hosts[num_of_host].c_str());
+        if (sendto(sock, &packet, sizeof(packet), 0, (struct sockaddr *) &sa, sizeof(sa)) < 0)
+            print_error(ERR_SEND);
+
     }
-    close(arp_fd);
+    close(sock);
+}
+
+void arp_recieve() {
+
+    int sock;
+    struct timeval start, end;
+    struct in_addr ip_addr;
+    struct arp_packet packet;
+    char ip[INET_ADDRSTRLEN];
+
+    if ((sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ARP))) < 0)
+        print_error(ERR_SOCK);
+
+    if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
+        print_error(ERR_SOCK);
+
+
+    gettimeofday(&start, NULL);
+
+    while (true) {
+        gettimeofday(&end, NULL);
+        if (end.tv_sec - start.tv_sec > 1) {
+            close(sock);
+            return;
+        }
+
+        if (recvfrom(sock, &packet, sizeof(packet), 0, NULL, NULL) != -1) {
+            ip_addr.s_addr = packet.src_ip;
+            strcpy(ip, inet_ntoa(ip_addr));
+            ip_active.emplace_back(ip);
+            cout << ip << endl;
+        }
+
+    }
 }
 
 void hosts() {
@@ -506,7 +552,6 @@ void hosts() {
                 (curr_ip & 0x0000FF00) >> 8,
                 (curr_ip & 0x000000FF)
         );
-        cout << char_mask << endl;
         ip_hosts.emplace_back(char_mask);
     }
 
@@ -516,6 +561,7 @@ void interface_info() {
 
     struct ifaddrs *ifaddr, *ifa;
     num_of_if = 0;
+    interface_to_scan = -1;
 
     if (getifaddrs(&ifaddr) == -1) {
         print_error(ERR_GAIN);
@@ -533,11 +579,12 @@ void interface_info() {
             if (sock < 0)
                 print_error(ERR_SOCK);
 
-            // get own IP address
+            // get IP address of interface
             memcpy(ifr.ifr_name, ifa->ifa_name, IF_NAMESIZE);
             if (ioctl(sock, SIOCGIFADDR, &ifr, sizeof(ifr)) < 0)
                 print_error(ERR_IOCTL);
 
+            interface[num_of_if].ip_bin = ntohl(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr.s_addr);
             interface[num_of_if].ip_addr = inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr);
 
             // get netmask of interface
@@ -552,7 +599,7 @@ void interface_info() {
 
             interface[num_of_if].if_index = ifr.ifr_ifindex;
 
-            // get MAC address
+            // get MAC address of interface
             if (ioctl(sock, SIOCGIFHWADDR, &ifr, sizeof(ifr)) < 0)
                 print_error(ERR_IOCTL);
 
@@ -560,9 +607,17 @@ void interface_info() {
 
             close(sock);
 
+            if (flags.i) {
+                if (args.interface == interface[num_of_if].name)
+                    interface_to_scan = num_of_if;
+            }
             num_of_if++;
         }
 
+    if (!flags.i)
+        for (int i = 0; i < num_of_if; i++)
+            if (interface[i].name.compare("lo"))
+                interface_to_scan = i;
 
 }
 
@@ -592,7 +647,6 @@ void cli_parser(int count, char *argument[]) {
 
         switch (c) {
             case 'h':
-                printf("option h \n");
                 print_error(ERR_HELP);
                 break;
 
@@ -600,7 +654,6 @@ void cli_parser(int count, char *argument[]) {
                 if (flags.i)
                     print_error(ERR_DUPL);
                 args.interface = optarg;
-                printf("option i with value '%s'\n", args.interface);
                 flags.i++;
                 break;
 
@@ -608,7 +661,6 @@ void cli_parser(int count, char *argument[]) {
                 if (flags.n)
                     print_error(ERR_DUPL);
                 args.network = optarg;
-                printf("option n with value '%s'\n", args.network);
                 flags.n++;
                 break;
 
@@ -616,7 +668,6 @@ void cli_parser(int count, char *argument[]) {
                 if (flags.t)
                     print_error(ERR_DUPL);
                 args.tcp = true;
-                printf("option t '%d'\n", args.tcp);
                 flags.t++;
                 break;
 
@@ -624,7 +675,6 @@ void cli_parser(int count, char *argument[]) {
                 if (flags.u)
                     print_error(ERR_DUPL);
                 args.udp = true;
-                printf("option u '%d'\n", args.udp);
                 flags.u++;
                 break;
 
@@ -633,7 +683,6 @@ void cli_parser(int count, char *argument[]) {
                 if (flags.p)
                     print_error(ERR_DUPL);
                 args.port = validated_number(optarg, PORT_CHECK);
-                printf("option p with value '%d'\n", args.port);
                 flags.p++;
                 break;
 
@@ -641,7 +690,6 @@ void cli_parser(int count, char *argument[]) {
                 if (flags.w)
                     print_error(ERR_DUPL);
                 args.wait = validated_number(optarg, TIME_CHECK);
-                printf("option w with value '%d'\n", args.wait);
                 flags.w++;
                 break;
 
@@ -654,10 +702,10 @@ void cli_parser(int count, char *argument[]) {
     }
 
     if (optind < count) {
-        printf("non-option ARGV-elements: ");
+        printf("Unknown arg: ");
         while (optind < count)
-            printf("%s ", argument[optind++]);
-        printf("\n");
+            cout << argument[optind++];
+        cout << endl;
 
         print_error(ERR_HELP);
     }
@@ -666,6 +714,9 @@ void cli_parser(int count, char *argument[]) {
 
     if (validated_number(args.ip, IP_CHECK) != 1)
         print_error(ERR_NETW);
+
+    if (flags.p && !(flags.u || flags.t))
+        print_error(ERR_HELP);
 
 }
 
@@ -707,12 +758,12 @@ unsigned short checksum(unsigned short *buff, int size) {
 }
 
 int validated_number(char *input, int type) {
-    char *ptr = NULL;
+    char *ptr = nullptr;
     long tmp;
 
     if (type != IP_CHECK) {
         tmp = strtol(input, &ptr, 10);
-        if (*ptr != NULL)
+        if (*ptr != 0)
             print_error(ERR_HELP);
 
         if (type == PORT_CHECK && (tmp > 65535 || tmp < 0))
@@ -781,6 +832,10 @@ void print_error(int error) {
 
         case ERR_IOCTL:
             fprintf(stderr, "Ioctl failed !\n");
+            break;
+
+        case ERR_RECV:
+            fprintf(stderr, "Recv failed !\n");
             break;
 
         default:
