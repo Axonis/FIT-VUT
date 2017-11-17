@@ -24,6 +24,7 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <thread>
+#include <algorithm>
 
 struct L4_packet {
     uint32_t ip_src;
@@ -45,11 +46,14 @@ struct if_info {
     int if_index;
 };
 
+
 int num_of_if;
 int interface_to_scan;
+int start_port, end_port;
 
 std::vector<std::string> ip_hosts;
 std::vector<std::string> ip_active;
+std::vector<int> udp_blocked_port;
 
 if_info interface[10];
 
@@ -88,7 +92,7 @@ void interface_info();
 
 void udp_send(std::string ip_addr);
 
-void udp_recieve();
+void udp_recieve(std::string ip_addr);
 
 void tcp_send(std::string ip_addr);
 

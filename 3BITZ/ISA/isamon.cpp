@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     if (args.udp)
         for (int i = 0; i < ip_active.size(); ++i) {
             thread send(udp_send, ip_active[i]);
-            thread recieve(udp_recieve);
+            thread recieve(udp_recieve, ip_active[i]);
 
             send.join();
             recieve.join();
@@ -46,9 +46,6 @@ void udp_send(string ip_addr) {
 
     int sock;
     int tmp = 1;
-
-    int first;        // Prvy scannovany port
-    int last;        // Posledny scannovany port
 
     char *full_packet;
 
@@ -69,17 +66,8 @@ void udp_send(string ip_addr) {
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
-    if (flags.p == 1) {
-        first = args.port;
-        last = args.port;
-    } else {
-        first = 1; //first_port;
-        last = 100; //last_port;
-    }
 
-
-    /* Rozposlanie tcp syn sprav vsetkym pozadovanym portom */
-    for (int port = first; port <= last; port++) {
+    for (int port = start_port; port <= end_port; port++) {
 
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
@@ -123,22 +111,25 @@ void udp_send(string ip_addr) {
         udp->check = (checksum((unsigned short *) full_packet,
                                (int) (sizeof(struct L4_packet) + sizeof(struct udphdr))));
 
+        tryagain:
         if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0) {
-            print_error(ERR_SEND);
+            if(errno == EAGAIN)
+            goto tryagain;
         }
-        usleep(30);
     }
 
     close(sock);
 }
 
-void udp_recieve() {
+void udp_recieve(string ip_addr) {
     struct timeval start, end;
-    char str[INET_ADDRSTRLEN];
     struct icmphdr *icmp;
     struct iphdr *ip, *ip2;
     struct udphdr *udp;
     int sock;
+
+    udp_blocked_port.clear();
+
 
     if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
         print_error(ERR_SOCK);
@@ -152,6 +143,13 @@ void udp_recieve() {
         gettimeofday(&end, NULL);
         if (end.tv_sec - start.tv_sec > 1) {
             close(sock);
+            for (int port = start_port; port <= end_port; port++) {
+                if (find(udp_blocked_port.begin(), udp_blocked_port.end(), port) != udp_blocked_port.end()) {
+                    continue;
+                } else {
+                    cout << ip_addr << " UDP " << port << endl;
+                }
+            }
             return;
         }
         if (recv(sock, buffer, sizeof(buffer), 0) > 0) {
@@ -161,12 +159,12 @@ void udp_recieve() {
             ip2 = (struct iphdr *) (icmp + 1);
             udp = (struct udphdr *) (((uint8_t *) ip2) + (ip2->ihl * 4));
 
-            //cout << "From IP: " << inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN)  << " Port " << ntohs(udp->dest)  << " ICMP TYPE: " << (int)icmp->type << endl;
 
-            if (icmp->type != ICMP_PORT_UNREACH) {
-                cout << inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN) << " UPD " << ntohs(udp->dest) << endl;
+
+            if ((icmp->type == ICMP_UNREACH) && (icmp->code == ICMP_UNREACH_PORT)) {
+                udp_blocked_port.emplace_back(ntohs(udp->dest));
+                //cout << "From IP: " << ip_addr  << " Port " << ntohs(udp->dest)  << " ICMP TYPE: " << (int)icmp->type << endl;
             }
-
         }
     }
 }
@@ -176,8 +174,6 @@ void tcp_send(string ip_addr) {
     int sock;
     int tmp = 1;
 
-    int first;
-    int last;
     char *full_packet;
     char buffer[4096];
 
@@ -198,16 +194,8 @@ void tcp_send(string ip_addr) {
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
-    if (flags.p == 1) {
-        first = args.port;
-        last = args.port;
-    } else {
-        first = 1; //first_port;
-        last = 10000; //last_port;
-    }
 
-
-    for (int port = first; port <= last; port++) {
+    for (int port = start_port; port <= end_port; port++) {
 
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
@@ -254,12 +242,14 @@ void tcp_send(string ip_addr) {
         tcp->check = (checksum((unsigned short *) full_packet,
                                (int) (sizeof(struct L4_packet) + sizeof(struct tcphdr))));
 
-        /*if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0) {
+        tryagain:
+        if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0) {
+            if (errno == EAGAIN)
+                // resources are blocked, need to retry
+                goto tryagain;
             print_error(ERR_SEND);
-        }*/
 
-        sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr));
-        usleep(30);
+        }
     }
 
     close(sock);
@@ -351,8 +341,10 @@ void icmp_send() {
         icmp_packet.icmp_code = 0;
         icmp_packet.icmp_cksum = checksum((unsigned short *) &icmp_packet, sizeof(icmp_packet));
 
-        if (sendto(sock, (char *) &icmp_packet, sizeof(icmp_packet), 0, (struct sockaddr *) &addr, sizeof(addr)) < 1)
+        if (sendto(sock, (char *) &icmp_packet, sizeof(icmp_packet), 0, (struct sockaddr *) &addr, sizeof(addr)) < 1) {
+            cout << errno << endl;
             print_error(ERR_SEND);
+        }
     }
     close(sock);
 }
@@ -717,6 +709,14 @@ void cli_parser(int count, char *argument[]) {
 
     if (flags.p && !(flags.u || flags.t))
         print_error(ERR_HELP);
+
+    if (flags.p == 1) {
+        start_port = args.port;
+        end_port = args.port;
+    } else {
+        start_port = 1;
+        end_port = 50;
+    }
 
 }
 
