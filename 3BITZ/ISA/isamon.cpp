@@ -1,3 +1,10 @@
+/**
+ * Project ISAMON - IPK 2017
+ * Author: Jozef Urbanovsky, 3BIT
+ * Revision: 1.28
+ * Date: 17.11.2017
+ * */
+
 #include "isamon.h"
 
 using namespace std;
@@ -6,7 +13,9 @@ using namespace std;
 int main(int argc, char *argv[]) {
 
     cli_parser(argc, argv);
+
     interface_info();
+
     hosts();
 
     thread send_icmp(icmp_send);
@@ -57,18 +66,22 @@ void udp_send(string ip_addr) {
 
     uint32_t init_seq = 1234567890;
 
+    // Create RAW UDP socket
     if ((sock = socket(PF_INET, SOCK_RAW, IPPROTO_UDP)) < 0)
         print_error(ERR_SOCK);
 
+    // Option for socket to generate IP header
     if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char *) &tmp, sizeof(tmp)) < 0)
         print_error(ERR_SOCK);
 
+    // Option for socket to be non-blocking
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
-
+    // Loop through all ports requested
     for (int port = start_port; port <= end_port; port++) {
 
+        // Set port and IP address in each iteration
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
         addr.sin_addr.s_addr = inet_addr(ip_addr.c_str());
@@ -77,7 +90,7 @@ void udp_send(string ip_addr) {
         ip = (struct iphdr *) buffer;
         udp = (struct udphdr *) (buffer + sizeof(struct iphdr));
 
-        // L3
+        // Fill out L3 data
         ip->ihl = 5;
         ip->version = 4;
         ip->tot_len = sizeof(struct iphdr) + sizeof(struct udphdr);
@@ -89,7 +102,7 @@ void udp_send(string ip_addr) {
         ip->daddr = inet_addr(ip_addr.c_str());
         ip->check = checksum((unsigned short *) buffer, ip->tot_len);
 
-        // L4
+        // Fill out L4 data
         udp->source = htons(MAGIC_PORT);
         udp->dest = htons(port);
         udp->len = htons(sizeof(struct udphdr));
@@ -100,17 +113,16 @@ void udp_send(string ip_addr) {
         packet.protocol = IPPROTO_UDP;
         packet.length = htons(sizeof(struct udphdr));
 
+        // Allocate memory for full packet constructed and fill it
         full_packet = (char *) malloc((int) (sizeof(struct L4_packet) + sizeof(struct udphdr)));
-
         memset(full_packet, 0, sizeof(struct L4_packet) + sizeof(struct udphdr));
-
         memcpy(full_packet, (char *) &packet, sizeof(struct L4_packet));
-
         memcpy(full_packet + sizeof(struct L4_packet), udp, sizeof(struct udphdr));
 
         udp->check = (checksum((unsigned short *) full_packet,
                                (int) (sizeof(struct L4_packet) + sizeof(struct udphdr))));
 
+        // Retry if EAGAIN is set to errno, as there are no resources at this moment
         tryagain:
         if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0) {
             if(errno == EAGAIN)
@@ -130,17 +142,20 @@ void udp_recieve(string ip_addr) {
 
     udp_blocked_port.clear();
 
-
+    // Create RAW ICMP socket
     if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
         print_error(ERR_SOCK);
 
+    // Set socket to be non-blocking
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
+    // Get start time to terminate loop
     gettimeofday(&start, NULL);
 
     while (true) {
         gettimeofday(&end, NULL);
+        // If timeout expires close socket and print out ports that did not respond
         if (end.tv_sec - start.tv_sec > 1) {
             close(sock);
             for (int port = start_port; port <= end_port; port++) {
@@ -154,17 +169,16 @@ void udp_recieve(string ip_addr) {
         }
         if (recv(sock, buffer, sizeof(buffer), 0) > 0) {
             // https://stackoverflow.com/questions/47042355/access-udp-from-icmp-message
+            // Pointer arithmetic to use one socket but get data of both UDP and ICMP headers
             ip = (struct iphdr *) buffer;
             icmp = (struct icmphdr *) (buffer + (ip->ihl * 4));
             ip2 = (struct iphdr *) (icmp + 1);
             udp = (struct udphdr *) (((uint8_t *) ip2) + (ip2->ihl * 4));
 
 
-
-            if ((icmp->type == ICMP_UNREACH) && (icmp->code == ICMP_UNREACH_PORT)) {
+            // If ICMP 3,3 is returned we can know for sure that port is closed
+            if ((icmp->type == ICMP_UNREACH) && (icmp->code == ICMP_UNREACH_PORT))
                 udp_blocked_port.emplace_back(ntohs(udp->dest));
-                //cout << "From IP: " << ip_addr  << " Port " << ntohs(udp->dest)  << " ICMP TYPE: " << (int)icmp->type << endl;
-            }
         }
     }
 }
@@ -175,7 +189,7 @@ void tcp_send(string ip_addr) {
     int tmp = 1;
 
     char *full_packet;
-    char buffer[4096];
+    uint8_t buffer[IP_MAXPACKET];
 
     struct iphdr *ip;
     struct tcphdr *tcp;
@@ -185,18 +199,22 @@ void tcp_send(string ip_addr) {
 
     uint32_t init_seq = 1234567890;
 
+    // Create RAW TCP socket
     if ((sock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP)) < 0)
         print_error(ERR_SOCK);
 
+    // Option for socket to generate IP header
     if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char *) &tmp, sizeof(tmp)) < 0)
         print_error(ERR_SOCK);
 
+    // Option for socket to be non-blocking
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
-
+    // Loop through all ports requested
     for (int port = start_port; port <= end_port; port++) {
 
+        // Set port and IP address in each iteration
         addr.sin_family = AF_INET;
         addr.sin_port = htons(port);
         addr.sin_addr.s_addr = inet_addr(ip_addr.c_str());
@@ -205,7 +223,7 @@ void tcp_send(string ip_addr) {
         ip = (struct iphdr *) buffer;
         tcp = (struct tcphdr *) (buffer + sizeof(struct iphdr));
 
-        // L3
+        // Fill out L3 data
         ip->ihl = 5;
         ip->version = 4;
         ip->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr);
@@ -217,7 +235,7 @@ void tcp_send(string ip_addr) {
         ip->daddr = inet_addr(ip_addr.c_str());
         ip->check = checksum((unsigned short *) buffer, ip->tot_len);
 
-        // L4
+        // Fill out L4 data
         tcp->source = htons(MAGIC_PORT);
         tcp->dest = htons(port);
         tcp->seq = htonl(init_seq);
@@ -232,24 +250,20 @@ void tcp_send(string ip_addr) {
         packet.protocol = IPPROTO_TCP;
         packet.length = htons(sizeof(struct tcphdr));
 
+        // Allocate memory for full packet constructed and fill it
         full_packet = (char *) malloc((int) (sizeof(struct L4_packet) + sizeof(struct tcphdr)));
         memset(full_packet, 0, sizeof(struct L4_packet) + sizeof(struct tcphdr));
-
         memcpy(full_packet, (char *) &packet, sizeof(struct L4_packet));
-
         memcpy(full_packet + sizeof(struct L4_packet), tcp, sizeof(struct tcphdr));
 
         tcp->check = (checksum((unsigned short *) full_packet,
                                (int) (sizeof(struct L4_packet) + sizeof(struct tcphdr))));
 
+        // Retry if EAGAIN is set to errno, as there are no resources at this moment
         tryagain:
-        if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0) {
+        if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0)
             if (errno == EAGAIN)
-                // resources are blocked, need to retry
                 goto tryagain;
-            print_error(ERR_SEND);
-
-        }
     }
 
     close(sock);
@@ -264,34 +278,39 @@ void tcp_recieve() {
     char buf[512];
     char str[INET_ADDRSTRLEN];
 
+    // Create RAW TCP socket
     if ((sock = socket(PF_INET, SOCK_RAW, IPPROTO_TCP)) < 0)
         print_error(ERR_SOCK);
 
+    // Set it to be non-blocking
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
-
+    // Get start time to terminate loop
     gettimeofday(&start, NULL);
 
     while (true) {
 
+        // If timeout expires close socket and end loop
         gettimeofday(&end, NULL);
         if (end.tv_sec - start.tv_sec >= 1) {
             close(sock);
             return;
         }
 
-
         memset(buffer, 0, sizeof(buffer));
 
         if ((recv(sock, buffer, sizeof(buffer), 0)) > 0) {
 
+            // Pointer arithmetic to read data from buffer
             ip = (struct iphdr *) buffer;
             tcp = (struct tcphdr *) (buffer + (ip->ihl * 4));
 
+            // Check if TCP syn has been received to determine if port is open
             if (tcp->syn == 1) {
                 open_port = ntohs(tcp->source);
                 inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN);
+                // Not to see traffic from other socket and thread from same interface
                 if (open_port == MAGIC_PORT)
                     continue;
                 cout << str << " TCP " << open_port << endl;
@@ -312,9 +331,11 @@ void icmp_send() {
     struct icmphdr *icmp;
     struct iphdr *ip;
 
+    // Create RAW ICMP socket
     if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
         print_error(ERR_SOCK);
 
+    // Set it to be non-blocking
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
@@ -331,12 +352,14 @@ void icmp_send() {
     memset(&icmp_packet, 0, sizeof(icmp_packet));
 
 
+    // Iterate over all hosts in network
     for (int num_of_host = 0; num_of_host < ip_hosts.size(); num_of_host++) {
 
         memset(&icmp_packet, 0, sizeof(icmp_packet));
 
         addr.sin_addr.s_addr = inet_addr(ip_hosts[num_of_host].c_str());
 
+        // Set ICMP type to echo
         icmp_packet.icmp_type = ICMP_ECHO;
         icmp_packet.icmp_code = 0;
         icmp_packet.icmp_cksum = checksum((unsigned short *) &icmp_packet, sizeof(icmp_packet));
@@ -359,15 +382,19 @@ void icmp_recieve() {
 
     struct timeval start, end;
 
+    // Create ICMP RAW socket
     if ((sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
         print_error(ERR_SOCK);
 
+    // Set it to not block operations
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
+    // Start timer to have termination point for loop
     gettimeofday(&start, NULL);
 
     while (true) {
+        // If timer expires end loop and close socket
         gettimeofday(&end, NULL);
         if (end.tv_sec - start.tv_sec > 1) {
             close(sock);
@@ -375,9 +402,11 @@ void icmp_recieve() {
         }
         if (recv(sock, buffer, sizeof(buffer), 0) > 0) {
 
+            // Pointer arithmetic to get data from buffer
             ip = (struct iphdr *) buffer;
             icmp = (struct icmphdr *) (buffer + (ip->ihl * 4));
 
+            // If ICMP ECHO reply is received host is inserted into vector of active hosts
             if (icmp->type == ICMP_ECHOREPLY) {
                 cout << inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN) << endl;
                 ip_active.emplace_back(str);
@@ -390,12 +419,15 @@ void arp_send(if_info intf) {
 
     int sock;
 
+    // Create RAW ARP socket
     if ((sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ARP))) < 0)
         print_error(ERR_SOCK);
 
+    // Set it to non-blocking
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
+    // Create ARP packet and fill it with proper information
     struct arp_packet packet;
     memset(packet.ether.ether_dhost, 0xFF, sizeof(packet.ether.ether_dhost)); // destination broadcast
     memcpy(packet.ether.ether_shost, intf.mac, sizeof(packet.ether.ether_dhost)); // source local interface
@@ -411,6 +443,7 @@ void arp_send(if_info intf) {
     memset(packet.dst_mac, 0, sizeof(packet.dst_mac));
     memset(packet.padding, 0, sizeof(packet.padding));
 
+    // Set link level header to broadcast and ARP
     struct sockaddr_ll sa;
     sa.sll_family = AF_PACKET;
     sa.sll_protocol = htons(ETH_P_ARP);
@@ -419,7 +452,7 @@ void arp_send(if_info intf) {
     sa.sll_pkttype = PACKET_BROADCAST;
     sa.sll_halen = 0;
 
-
+    // Loop over all IP address from given network
     for (int num_of_host = 0; num_of_host < ip_hosts.size(); num_of_host++) {
 
         packet.dst_ip = inet_addr(ip_hosts[num_of_host].c_str());
@@ -438,22 +471,27 @@ void arp_recieve() {
     struct arp_packet packet;
     char ip[INET_ADDRSTRLEN];
 
+    // Create RAW ARP socket
     if ((sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ARP))) < 0)
         print_error(ERR_SOCK);
 
+    // Set it to be non-blocking
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
-
+    // Start timeout to break from loop
     gettimeofday(&start, NULL);
 
     while (true) {
+        // If timeout expires break loop and close socket
         gettimeofday(&end, NULL);
         if (end.tv_sec - start.tv_sec > 1) {
             close(sock);
             return;
         }
 
+        // If socket is received it means active host responded with its IP and MAC
+        // IP address is inserted into active hosts vector
         if (recvfrom(sock, &packet, sizeof(packet), 0, NULL, NULL) != -1) {
             ip_addr.s_addr = packet.src_ip;
             strcpy(ip, inet_ntoa(ip_addr));
@@ -476,18 +514,18 @@ void hosts() {
     int ip_start[4];
     int ip_end[4];
 
+    // Shift bits of CIDR mask to create dotted representation
     bits = 0xffffffff ^ (1 << 32 - args.mask) - 1;
-
-
     bin_mask[0] = (bits & 0x0000000000ff000000) >> 24;
     bin_mask[1] = (bits & 0x0000000000ff0000) >> 16;
     bin_mask[2] = (bits & 0x0000000000ff00) >> 8;
     bin_mask[3] = bits & 0xff;
 
+    // Consolidate octets to array of char
     sprintf(char_mask, "%d.%d.%d.%d", bin_mask[0], bin_mask[1], bin_mask[2], bin_mask[3]);
 
 
-    /* Check if IP is IP of network */
+    // Check if IP is IP of network
     if (inet_pton(AF_INET, args.ip, &struct_host) == 1 &&
         inet_pton(AF_INET, char_mask, &struct_mask) == 1)
         broadcast.s_addr = struct_host.s_addr | ~struct_mask.s_addr;
@@ -498,8 +536,8 @@ void hosts() {
         print_error(ERR_NETW);
 
 
+    // Divide IP into octets
     char *tmp;
-
     tmp = strtok(args.ip, ".");
     ip_start[0] = atoi(tmp);
 
@@ -512,8 +550,10 @@ void hosts() {
     tmp = strtok(NULL, " ");
     ip_start[3] = atoi(tmp);
 
+    // Shift bits of octets to create binary representation
     first_ip = (ip_start[0] << 24 | ip_start[1] << 16 | ip_start[2] << 8 | ip_start[3]);
 
+    // Divide IP into octets
     tmp = strtok(broadcast_address, ".");
     ip_end[0] = atoi(tmp);
 
@@ -526,8 +566,10 @@ void hosts() {
     tmp = strtok(NULL, " ");
     ip_end[3] = atoi(tmp);
 
+    // Shift bits of octets to create binary representation
     last_ip = (ip_end[0] << 24 | ip_end[1] << 16 | ip_end[2] << 8 | ip_end[3]);
 
+    // Check if given network is in correct form with mask
     for (int i = 0; i < 4; i++) {
         if (ip_start[i] == (ip_start[i] & bin_mask[i]))
             continue;
@@ -537,6 +579,7 @@ void hosts() {
 
     int curr_ip;
 
+    // Iterate over IP addresses to fill out vector of all hosts to be scanned
     for (curr_ip = first_ip + 1; curr_ip < last_ip; curr_ip++) {
         sprintf(char_mask, "%d.%d.%d.%d",
                 (curr_ip & 0xFF000000) >> 24,
@@ -559,7 +602,9 @@ void interface_info() {
         print_error(ERR_GAIN);
     }
 
+    // Iterate over all interfaces found by getifaddrs
     for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+        // If interface is IPv4 enabled
         if (ifa->ifa_addr->sa_family == AF_INET) {
 
             interface[num_of_if].name = ifa->ifa_name;
@@ -571,7 +616,7 @@ void interface_info() {
             if (sock < 0)
                 print_error(ERR_SOCK);
 
-            // get IP address of interface
+            // Get IP address of interface
             memcpy(ifr.ifr_name, ifa->ifa_name, IF_NAMESIZE);
             if (ioctl(sock, SIOCGIFADDR, &ifr, sizeof(ifr)) < 0)
                 print_error(ERR_IOCTL);
@@ -579,19 +624,19 @@ void interface_info() {
             interface[num_of_if].ip_bin = ntohl(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr.s_addr);
             interface[num_of_if].ip_addr = inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr);
 
-            // get netmask of interface
+            // Get netmask of interface
             if (ioctl(sock, SIOCGIFNETMASK, &ifr, sizeof(ifr)) < 0)
                 print_error(ERR_IOCTL);
 
             interface[num_of_if].mask = inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr);
 
-            // get index of interface
+            // Get index of interface
             if (ioctl(sock, SIOCGIFINDEX, &ifr, sizeof(ifr)) < 0)
                 print_error(ERR_IOCTL);
 
             interface[num_of_if].if_index = ifr.ifr_ifindex;
 
-            // get MAC address of interface
+            // Get MAC address of interface
             if (ioctl(sock, SIOCGIFHWADDR, &ifr, sizeof(ifr)) < 0)
                 print_error(ERR_IOCTL);
 
@@ -599,6 +644,7 @@ void interface_info() {
 
             close(sock);
 
+            // If interface argument is set also set auxiliary variable
             if (flags.i) {
                 if (args.interface == interface[num_of_if].name)
                     interface_to_scan = num_of_if;
@@ -620,6 +666,7 @@ void cli_parser(int count, char *argument[]) {
 
     int c;
 
+    // Long_options structure with agruments
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
@@ -633,10 +680,12 @@ void cli_parser(int count, char *argument[]) {
                 {0, 0,                           0, 0}
         };
 
+        // Getopt_long with arguments
         c = getopt_long(count, argument, "htui:n:p:w:", long_options, &option_index);
         if (c == -1)
             break;
 
+        // In case of every arguments set its flag, check its validity and insert it into cli_arguments structure
         switch (c) {
             case 'h':
                 print_error(ERR_HELP);
@@ -693,6 +742,7 @@ void cli_parser(int count, char *argument[]) {
         }
     }
 
+    // If unknown arguments is read
     if (optind < count) {
         printf("Unknown arg: ");
         while (optind < count)
@@ -704,26 +754,32 @@ void cli_parser(int count, char *argument[]) {
 
     network_separator();
 
+    // When IP isn't valid
     if (validated_number(args.ip, IP_CHECK) != 1)
         print_error(ERR_NETW);
 
+    // When port is set without UDP or TCP scap
     if (flags.p && !(flags.u || flags.t))
         print_error(ERR_HELP);
 
+    // If port is not set scan all ports
     if (flags.p == 1) {
         start_port = args.port;
         end_port = args.port;
-    } else {
+    }
+    else {
         start_port = 1;
-        end_port = 50;
+        end_port = 65535;
     }
 
 }
 
 void network_separator() {
+    // Divide by slash
     char *token = strtok(args.network, "/");
     int counter = 0;
-    /* If mask is not set, it's considered as host */
+
+    // If mask is not set, it's considered as host
     args.mask = 32;
 
     while (token != NULL) {
@@ -762,13 +818,16 @@ int validated_number(char *input, int type) {
     long tmp;
 
     if (type != IP_CHECK) {
+        // Convert number and check its validity
         tmp = strtol(input, &ptr, 10);
         if (*ptr != 0)
             print_error(ERR_HELP);
 
+        // Port range
         if (type == PORT_CHECK && (tmp > 65535 || tmp < 0))
             print_error(ERR_PORT);
 
+        // Real timeout values
         if (type == TIME_CHECK)
             if (tmp > 5000 || tmp < 0)
                 print_error(ERR_WAIT);
@@ -776,7 +835,7 @@ int validated_number(char *input, int type) {
                 tmp = tmp * 1000;
     } else {
         struct sockaddr_in sa;
-        // returns 1 on success, 0 if input is not valid IP
+        // Returns 1 on success, 0 if input is not valid IP
         int check = inet_pton(AF_INET, input, &(sa.sin_addr));
         tmp = check;
     }
