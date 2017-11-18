@@ -43,7 +43,6 @@ struct L4_packet {
 struct if_info {
     std::string name;
     std::string ip_addr;
-    uint32_t ip_bin;
     std::string mask;
     char mac[14];
     int if_index;
@@ -74,7 +73,6 @@ struct cli_arguments {
     int mask;
 } args;
 
-
 struct cli_duplicite_flags {
     int i;
     int n;
@@ -82,6 +80,7 @@ struct cli_duplicite_flags {
     int u;
     int p;
     int w;
+    int a;
 } flags;
 
 struct arp_packet {
@@ -103,6 +102,7 @@ uint8_t buffer[IP_MAXPACKET]; // Buffer for all communication
 int num_of_if;
 int interface_to_scan;
 int start_port, end_port;
+int on;
 
 std::vector<std::string> ip_hosts;
 std::vector<std::string> ip_active;
@@ -138,6 +138,22 @@ void cli_parser(int count, char *argument[]);
  *
  */
 void print_error(int error);
+
+/**
+ * /**
+ * @brief Transforms consolidated IP to octets and binary representation
+ *
+ * Function takes array of char of IP address to divide it based on '.'
+ * delimiter. IP is then split into 4 octets and octets are shifted
+ * to return binary value of IP address.
+ *
+ * @param ip - IP address to be converted
+ * @param array - pointer to start of array to append to
+ *
+ * @return binary representation of IP address
+ *
+ */
+int ip_octets_binary (char* ip, int* array);
 
 /**
  * @brief Validates given number according to its needs

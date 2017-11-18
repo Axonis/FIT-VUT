@@ -1,16 +1,19 @@
 /**
+ *
  * Project ISAMON - IPK 2017
  * Author: Jozef Urbanovsky, 3BIT
- * Revision: 1.28
- * Date: 17.11.2017
+ * Revision: 1.29 - comments
+ * Date: 18.11.2017
+ *
  * */
 
 #include "isamon.h"
 
 using namespace std;
 
-
 int main(int argc, char *argv[]) {
+
+    // TODO interface_to_scan in UDP and TCP
 
     cli_parser(argc, argv);
 
@@ -18,20 +21,44 @@ int main(int argc, char *argv[]) {
 
     hosts();
 
+    cout << "ICMP starting: " << endl;
     thread send_icmp(icmp_send);
     thread recieve_icmp(icmp_recieve);
 
     send_icmp.join();
     recieve_icmp.join();
 
-    /*thread send_arp(arp_send, interface[1]);
-    thread recieve_arp(arp_recieve);
+    if (flags.a) {
+        cout << "ARP starting: " << endl;
+        int start_if, end_if;
 
-    send_arp.join();
-    recieve_arp.join();*/
+        if (flags.i) {
+            start_if = interface_to_scan;
+            end_if = interface_to_scan;
+        } else {
+            start_if = 0;
+            end_if = num_of_if;
+        }
+
+        for (int intf = start_if; intf < end_if; intf++) {
+            thread send_arp(arp_send, interface[intf]);
+            thread recieve_arp(arp_recieve);
+
+            send_arp.join();
+            recieve_arp.join();
+        }
+    }
+
+
+    // Sort out vector and delete duplicity to make port scanning more efficient
+    sort(ip_active.begin(), ip_active.end());
+    ip_active.erase(unique(ip_active.begin(), ip_active.end()), ip_active.end());
+
+    for (int i = 0; i < ip_active.size(); i++)
+        cout << ip_active[i] << endl;
 
     if (args.tcp)
-        for (int i = 0; i < ip_active.size(); ++i) {
+        for (int i = 0; i < ip_active.size(); i++) {
             thread send(tcp_send, ip_active[i]);
             thread recieve(tcp_recieve);
 
@@ -40,7 +67,7 @@ int main(int argc, char *argv[]) {
         }
 
     if (args.udp)
-        for (int i = 0; i < ip_active.size(); ++i) {
+        for (int i = 0; i < ip_active.size(); i++) {
             thread send(udp_send, ip_active[i]);
             thread recieve(udp_recieve, ip_active[i]);
 
@@ -123,10 +150,10 @@ void udp_send(string ip_addr) {
                                (int) (sizeof(struct L4_packet) + sizeof(struct udphdr))));
 
         // Retry if EAGAIN is set to errno, as there are no resources at this moment
-        tryagain:
+        udp_retry:
         if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0) {
-            if(errno == EAGAIN)
-            goto tryagain;
+            if (errno == EAGAIN)
+                goto udp_retry;
         }
     }
 
@@ -156,7 +183,7 @@ void udp_recieve(string ip_addr) {
     while (true) {
         gettimeofday(&end, NULL);
         // If timeout expires close socket and print out ports that did not respond
-        if (end.tv_sec - start.tv_sec > 1) {
+        if (end.tv_sec - start.tv_sec > 0.5) {
             close(sock);
             for (int port = start_port; port <= end_port; port++) {
                 if (find(udp_blocked_port.begin(), udp_blocked_port.end(), port) != udp_blocked_port.end()) {
@@ -260,10 +287,10 @@ void tcp_send(string ip_addr) {
                                (int) (sizeof(struct L4_packet) + sizeof(struct tcphdr))));
 
         // Retry if EAGAIN is set to errno, as there are no resources at this moment
-        tryagain:
+        tcp_retry:
         if ((sendto(sock, buffer, ip->tot_len, 0, (sockaddr *) &addr, sizeof(addr))) < 0)
             if (errno == EAGAIN)
-                goto tryagain;
+                goto tcp_retry;
     }
 
     close(sock);
@@ -293,7 +320,7 @@ void tcp_recieve() {
 
         // If timeout expires close socket and end loop
         gettimeofday(&end, NULL);
-        if (end.tv_sec - start.tv_sec >= 1) {
+        if (end.tv_sec - start.tv_sec > 0.5) {
             close(sock);
             return;
         }
@@ -339,9 +366,14 @@ void icmp_send() {
     if ((fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK)) < 0)
         print_error(ERR_SOCK);
 
+    on = 1;
+    // Allow socket to send to broadcast if scan requires it
+    if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) < 0)
+        print_error(ERR_SOPT);
+
 
     // Bind to interface
-    if (interface_to_scan >= 0) {
+    if (flags.i) {
         memset(&ifr, 0, sizeof(ifr));
         snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), interface[interface_to_scan].name.c_str());
         if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, (void *) &ifr, sizeof(ifr)) < 0)
@@ -364,7 +396,10 @@ void icmp_send() {
         icmp_packet.icmp_code = 0;
         icmp_packet.icmp_cksum = checksum((unsigned short *) &icmp_packet, sizeof(icmp_packet));
 
-        if (sendto(sock, (char *) &icmp_packet, sizeof(icmp_packet), 0, (struct sockaddr *) &addr, sizeof(addr)) < 1) {
+        icmp_retry:
+        if (sendto(sock, (char *) &icmp_packet, sizeof(icmp_packet), 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+            if (errno == ENOBUFS)
+                goto icmp_retry;
             cout << errno << endl;
             print_error(ERR_SEND);
         }
@@ -396,7 +431,7 @@ void icmp_recieve() {
     while (true) {
         // If timer expires end loop and close socket
         gettimeofday(&end, NULL);
-        if (end.tv_sec - start.tv_sec > 1) {
+        if (end.tv_sec - start.tv_sec > 0.5) {
             close(sock);
             return;
         }
@@ -408,8 +443,8 @@ void icmp_recieve() {
 
             // If ICMP ECHO reply is received host is inserted into vector of active hosts
             if (icmp->type == ICMP_ECHOREPLY) {
-                cout << inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN) << endl;
-                ip_active.emplace_back(str);
+                //cout << "ICMP: " << inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN) << endl;
+                ip_active.emplace_back(inet_ntop(AF_INET, &ip->saddr, str, INET_ADDRSTRLEN));
             }
         }
     }
@@ -439,7 +474,7 @@ void arp_send(if_info intf) {
     packet.arp.ar_op = htons(ARPOP_REQUEST);
 
     memcpy(packet.src_mac, intf.mac, sizeof(packet.src_mac));
-    packet.src_ip = htonl(intf.ip_bin);
+    packet.src_ip = inet_addr(intf.ip_addr.c_str());
     memset(packet.dst_mac, 0, sizeof(packet.dst_mac));
     memset(packet.padding, 0, sizeof(packet.padding));
 
@@ -456,8 +491,13 @@ void arp_send(if_info intf) {
     for (int num_of_host = 0; num_of_host < ip_hosts.size(); num_of_host++) {
 
         packet.dst_ip = inet_addr(ip_hosts[num_of_host].c_str());
-        if (sendto(sock, &packet, sizeof(packet), 0, (struct sockaddr *) &sa, sizeof(sa)) < 0)
+
+        arp_retry:
+        if (sendto(sock, &packet, sizeof(packet), 0, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
+            if (errno == EAGAIN)
+                goto arp_retry;
             print_error(ERR_SEND);
+        }
 
     }
     close(sock);
@@ -485,7 +525,7 @@ void arp_recieve() {
     while (true) {
         // If timeout expires break loop and close socket
         gettimeofday(&end, NULL);
-        if (end.tv_sec - start.tv_sec > 1) {
+        if (end.tv_sec - start.tv_sec > 0.5) {
             close(sock);
             return;
         }
@@ -496,15 +536,37 @@ void arp_recieve() {
             ip_addr.s_addr = packet.src_ip;
             strcpy(ip, inet_ntoa(ip_addr));
             ip_active.emplace_back(ip);
-            cout << ip << endl;
+            //cout << "ARP: " << ip << endl;
         }
 
     }
 }
 
+int ip_octets_binary(char *ip, int *array) {
+
+    char *tmp;
+
+    tmp = strtok(ip, ".");
+    array[0] = atoi(tmp);
+
+    tmp = strtok(NULL, ".");
+    array[1] = atoi(tmp);
+
+    tmp = strtok(NULL, ".");
+    array[2] = atoi(tmp);
+
+    tmp = strtok(NULL, " ");
+    array[3] = atoi(tmp);
+
+    // Shift bits of octets to create binary representation
+    return (array[0] << 24 | array[1] << 16 | array[2] << 8 | array[3]);
+}
+
 void hosts() {
+
     // TODO 31 and 32 MASK
-    long bits = 0;
+
+    int bits = 0;
     int bin_mask[4];
     int first_ip, last_ip;
     char char_mask[INET_ADDRSTRLEN];
@@ -514,18 +576,18 @@ void hosts() {
     int ip_start[4];
     int ip_end[4];
 
-    // Shift bits of CIDR mask to create dotted representation
+    // Shift bits of CIDR mask to create dotted representation in octets
     bits = 0xffffffff ^ (1 << 32 - args.mask) - 1;
-    bin_mask[0] = (bits & 0x0000000000ff000000) >> 24;
-    bin_mask[1] = (bits & 0x0000000000ff0000) >> 16;
-    bin_mask[2] = (bits & 0x0000000000ff00) >> 8;
+    bin_mask[0] = (bits & 0xff000000) >> 24;
+    bin_mask[1] = (bits & 0xff0000) >> 16;
+    bin_mask[2] = (bits & 0xff00) >> 8;
     bin_mask[3] = bits & 0xff;
 
     // Consolidate octets to array of char
     sprintf(char_mask, "%d.%d.%d.%d", bin_mask[0], bin_mask[1], bin_mask[2], bin_mask[3]);
 
 
-    // Check if IP is IP of network
+    // Check if IP is IP of network and create broadcast address
     if (inet_pton(AF_INET, args.ip, &struct_host) == 1 &&
         inet_pton(AF_INET, char_mask, &struct_mask) == 1)
         broadcast.s_addr = struct_host.s_addr | ~struct_mask.s_addr;
@@ -537,37 +599,8 @@ void hosts() {
 
 
     // Divide IP into octets
-    char *tmp;
-    tmp = strtok(args.ip, ".");
-    ip_start[0] = atoi(tmp);
-
-    tmp = strtok(NULL, ".");
-    ip_start[1] = atoi(tmp);
-
-    tmp = strtok(NULL, ".");
-    ip_start[2] = atoi(tmp);
-
-    tmp = strtok(NULL, " ");
-    ip_start[3] = atoi(tmp);
-
-    // Shift bits of octets to create binary representation
-    first_ip = (ip_start[0] << 24 | ip_start[1] << 16 | ip_start[2] << 8 | ip_start[3]);
-
-    // Divide IP into octets
-    tmp = strtok(broadcast_address, ".");
-    ip_end[0] = atoi(tmp);
-
-    tmp = strtok(NULL, ".");
-    ip_end[1] = atoi(tmp);
-
-    tmp = strtok(NULL, ".");
-    ip_end[2] = atoi(tmp);
-
-    tmp = strtok(NULL, " ");
-    ip_end[3] = atoi(tmp);
-
-    // Shift bits of octets to create binary representation
-    last_ip = (ip_end[0] << 24 | ip_end[1] << 16 | ip_end[2] << 8 | ip_end[3]);
+    first_ip = ip_octets_binary(args.ip, &ip_start[0]);
+    last_ip = ip_octets_binary(broadcast_address, &ip_end[0]);
 
     // Check if given network is in correct form with mask
     for (int i = 0; i < 4; i++) {
@@ -577,17 +610,29 @@ void hosts() {
             print_error(ERR_NETW);
     }
 
-    int curr_ip;
+    int start_if, end_if;
+    if (flags.i) {
+        start_if = interface_to_scan;
+        end_if = interface_to_scan;
+    } else {
+        start_if = 0;
+        end_if = num_of_if-1;
+    }
 
     // Iterate over IP addresses to fill out vector of all hosts to be scanned
-    for (curr_ip = first_ip + 1; curr_ip < last_ip; curr_ip++) {
+    for (int curr_ip = first_ip + 1; curr_ip < last_ip; curr_ip++) {
         sprintf(char_mask, "%d.%d.%d.%d",
                 (curr_ip & 0xFF000000) >> 24,
-                (curr_ip & 0x00FF0000) >> 16,
-                (curr_ip & 0x0000FF00) >> 8,
-                (curr_ip & 0x000000FF)
+                (curr_ip & 0xFF0000) >> 16,
+                (curr_ip & 0xFF00) >> 8,
+                (curr_ip & 0xFF)
         );
         ip_hosts.emplace_back(char_mask);
+        if (!flags.a)
+            for (int i = start_if; i <= end_if; i++) {
+                if (interface[i].ip_addr == char_mask)
+                    flags.a++;
+            }
     }
 
 }
@@ -621,7 +666,6 @@ void interface_info() {
             if (ioctl(sock, SIOCGIFADDR, &ifr, sizeof(ifr)) < 0)
                 print_error(ERR_IOCTL);
 
-            interface[num_of_if].ip_bin = ntohl(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr.s_addr);
             interface[num_of_if].ip_addr = inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr);
 
             // Get netmask of interface
@@ -629,6 +673,7 @@ void interface_info() {
                 print_error(ERR_IOCTL);
 
             interface[num_of_if].mask = inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr);
+
 
             // Get index of interface
             if (ioctl(sock, SIOCGIFINDEX, &ifr, sizeof(ifr)) < 0)
@@ -744,7 +789,7 @@ void cli_parser(int count, char *argument[]) {
 
     // If unknown arguments is read
     if (optind < count) {
-        printf("Unknown arg: ");
+        cout << "Unknown argument: ";
         while (optind < count)
             cout << argument[optind++];
         cout << endl;
@@ -766,8 +811,7 @@ void cli_parser(int count, char *argument[]) {
     if (flags.p == 1) {
         start_port = args.port;
         end_port = args.port;
-    }
-    else {
+    } else {
         start_port = 1;
         end_port = 65535;
     }
@@ -846,7 +890,7 @@ int validated_number(char *input, int type) {
 void print_error(int error) {
     switch (error) {
         case ERR_HELP:
-            fprintf(stderr, "Usage:\n"
+            cerr << "Usage:\n"
                     "isamon [-h] [-i <interface>] [-t] [-u] [-p <port>] [-w <ms>] -n <net_address/mask> \n"
                     "   -h --help -- zobrazí nápovědu \n"
                     "   -i --interface <interface> -- rozhraní na kterém bude nástroj scanovat \n"
@@ -854,51 +898,52 @@ void print_error(int error) {
                     "   -t --tcp -- použije TCP \n"
                     "   -u --udp -- použije UDP \n"
                     "   -p --port <port> -- specifikace scanovaného portu, pokud není zadaný, scanujte celý rozsah \n"
-                    "   -w --wait <ms> -- dodatečná informace pro Váš nástroj jaké je maximální přípustné RTT ");
+                    "   -w --wait <ms> -- dodatečná informace pro Váš nástroj jaké je maximální přípustné RTT "
+                 << endl;
             break;
 
         case ERR_PORT:
-            fprintf(stderr, "Invalid port number !\n");
+            cerr << "Invalid port number !" << endl;
             break;
 
         case ERR_WAIT:
-            fprintf(stderr, "Invalid max RTT !\n");
+            cerr << "Invalid max RTT !" << endl;
             break;
 
         case ERR_DUPL:
-            fprintf(stderr, "Duplicite declaration of an argument !\n");
+            cerr << "Duplicite declaration of an argument !" << endl;
             break;
 
         case ERR_NETW:
-            fprintf(stderr, "Network is not in valid format !\n");
+            cerr << "Network is not in valid format !" << endl;
             break;
 
         case ERR_SOPT:
-            fprintf(stderr, "Setsockopt failed !\n");
+            cerr << "Setsockopt failed !" << endl;
             break;
 
         case ERR_SOCK:
-            fprintf(stderr, "Socket failed !\n");
+            cerr << "Socket failed !" << endl;
             break;
 
         case ERR_GAIN:
-            fprintf(stderr, "Getaddrinfo failed !\n");
+            cerr << "Getaddrinfo failed !" << endl;
             break;
 
         case ERR_SEND:
-            fprintf(stderr, "Sento failed !\n");
+            cerr << "Sento failed !" << endl;
             break;
 
         case ERR_IOCTL:
-            fprintf(stderr, "Ioctl failed !\n");
+            cerr << "Ioctk failed !" << endl;
             break;
 
         case ERR_RECV:
-            fprintf(stderr, "Recv failed !\n");
+            cerr << "Recv failed !" << endl;
             break;
 
         default:
-            fprintf(stderr, "Unknown error");
+            cerr << "Unknown fatal error !" << endl;
             break;
 
     }
