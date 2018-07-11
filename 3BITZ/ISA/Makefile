@@ -1,7 +1,7 @@
 CC=g++
-CFLAGS=-std=c++11 -g -o $@ isamon.cpp -pthread
+CFLAGS=-std=c++11 -g -o $@ src/isamon.cpp -pthread
 
-isamon: isamon.cpp
+isamon: src/isamon.cpp
 	$(CC) $(CFLAGS) 
 clean:
 	rm -f *.o *.out isamon

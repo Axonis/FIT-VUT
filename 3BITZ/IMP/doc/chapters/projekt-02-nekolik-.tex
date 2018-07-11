@@ -1,0 +1,54 @@
+\documentclass[../projekt.tex]{subfiles}
+\begin{document}
+
+\chapter{Implementácia}
+Samotná implementácia projektu je rozdelená do niekoľkých logických častí, z ktorých je každý popísaný detailne nižšie. Súbor s vlastnou implementáciou sa nachádza v zložke \texttt{sources}.
+
+
+\section{Príprava}
+Na tento projekt bolo vhodné využiť Kinetis Software Development Kit (KSDK)\cite{ksdk}, ktorý obsahoval implementáciu CRC kódu, navrhovanú v zadaní projektu. Inšpiráciou z demo aplikácie z KSDK pre dosku \texttt{twrk60d100m} a využitím KSDK bolo možné abstrahovať implementáciu bez nutnosti písania inicializácie samotnej dosky, čítačov a iných registrov potrebných pre výpočet a beh programu. Testovacie dáta majú predvypočítané kontrolné súčty, pre možnosť overenia správnosti počítania naimplementovaných CRC kódov.
+
+\section{Hardwarový modul}
+Pre implementáciu 16 bitového cyklického zabezpečovacieho kódu som využil jeden z napoužívanejších CRC kódov s názvom \texttt{CRC16 CCITT FALSE}\cite{16b}, ktorého implementáciu môžeme nájsť aj napríklad u HDLC algoritmu na druhej sieťovej vrstve. Ako základný polynóm v tomto algoritme sa používa kombinácia \texttt{0x1021} a incializácia prebieha s polynómom \texttt{0xFFFF}. Po inicializácii hodnôt CRC konfigurácie sa do registru zapíšu dáta, nad ktorými sa CRC kód bude počítať. Následne sa vypočíta CRC použitím implementácie z hardwarového modulu K60 a výsledok sa uloží do premennej \texttt{checksum16}. 
+
+Výsledok tejto premennej sa porovná s obsahom \texttt{correct16}, kde je uložená predpočítaná správna hodnota zhodného CRC kódu. Pokiaľ sa zhodujú, vieme určiť, že nami vygenerovaný CRC kód je správny. 
+
+Následne ako experiment príjmateľa vyskúšame previesť CRC výpočet na daný kód pre overenie správnosti teoreticky prenesených dát. Pokiaľ je výsledok nulový, vieme určite, že dáta prišli v pôvodnej forme, ako boli vysielané. 
+
+Implementácia 32 bitového cyklického zabezpečovacieho kódu bola použitá varianta CRC-32\cite{32b}, známa aj pod názvom PKZIP. Využitý polynóm pre konfiguráciu CRC-32 kódu bol \texttt{0x04C11DB7}. Zbytok funkcionality je takmer zhodný s 16 bitovým CRC kódom s odlišnosťou výpisu a použitých registrov kvôli veľkosti samotného kódu.
+
+\section{Lookup tabuľka}
+Nakoľko tabuľka pri 16 bitovom CRC16 CCITT FALSE je nezávislá od dát bolo možné si ju bokom vyrátať, za použitia jednoduchého Python skriptu spolu s formátovaním pre C a pre účel zrýchlenia samotného výpočtu ju staticky definovať s predvypočítanými hodnotami do programu. 
+
+Algoritmus na vypočítanie hodnoty CRC kódu pre daný vstup sa prevádza vo funkcii \texttt{TableCRC16}\cite{crc}, ktorá pracuje postupne bit po bite nad vstupnými dátami a prevádza operáciu XOR s príslušným záznomom v lookup tabuľke. Po prejdení celého bloku dát je výsledkom CRC kód vypočítaný pomocou lookup tabuľky. 
+
+Podobne ako u hardwarového výpočtu sa vypočítaná hodnota porovná s referenčnou a prevedie sa experiment príjmateľa na verifikovanie správnosti potencionálne prenesených dát. Tento algoritmus bol inšpirovaný kódom a dokumentáciou projektu crccal.com\cite{crc}
+
+Implementácia 32 bitovej tabuľky je obdobná 16 bitovej a taktiež platí, že jej hodnoty sú nezávislé od vstupný dát, čo nám opäť umožnilo statickú definíciu. Na rozdiel od 16 bitovej varianty sú dáta na konci výpočtu ešte invertované, nakoľko CRC32 implementácia používa invertovaný polynóm \texttt{0xEDB88320}\cite{wiki}.
+
+\section{Matematický polynóm}
+Poslednou variantou je softwarová implementácia matematického polynómu vybraného CRC kódu. Pre 16 bitovú variantu CRC16 CRITT FALSE používame vzorec $x^{16}+x^{12}+x^{5}+1$ a pre zložitejšiu CRC32 variantu $$x^{32}+x^{26}+x^{23}+x^{22}+x^{16}+x^{12}+x^{11}+x^{10}+x^{8}+x^{7}+x^{5}+x^{4}+x^{2}+x+1$$
+Implementácia týchto polynómov je jemne zjednodušená s použitím bitových posunov a logických operátorov. Dáta sú prejdené bit po bite a na každú hodnotu je aplikovaný matematický polynóm pre výpočet CRC kódu. Pri 16 bitovom výpočte CRC kódu možno vidieť implementáciu polynómu nasledovne: 
+\begin{lstlisting}
+while (len--){
+	tmp = result >> 8 ^ *int_data++;
+	tmp ^= tmp >> 4;
+	result = (result << 8) ^ ((uint16_t)(tmp << 12)) ^ 
+		((uint16_t)(tmp << 5)) ^ ((uint16_t) tmp);
+	}
+\end{lstlisting}
+
+Pri 32 bitovej variante je výpočet inšpirovaný zo stránky Medium\cite{crc32} a využíva pre zjednodušenie výpočtu invertovaný polynóm \texttt{0xEDB88320}. Dáta sú ako zvyčajne bit po bite prejdené a za použitia logických operácii nad danými bitmi sa po vypočítaní jednoho bajtu použije XOR na výsledok a výpočet pokračuje až do konca vstupných dát. Kvôli využitiu invertovaného polynómu je nutné výsledok nakonci znegovať, aby sme dostali správny CRC súčet. Implementácia vnútorného cyklu výpočtu je nasledovná:
+\newpage
+\begin{lstlisting}
+while(len--) {
+	result ^= *int_data++;
+	for(i = 0; i < 8; i++) {
+		tmp = result & 1;
+		tmp--;
+		tmp = ~tmp;
+		result = (result >> 1) ^ (0xEDB88320 & tmp);
+	}
+}
+\end{lstlisting}
+\end{document}

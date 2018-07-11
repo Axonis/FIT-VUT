@@ -1,0 +1,14 @@
+\documentclass[../projekt.tex]{subfiles}
+\begin{document}
+%=========================================================================
+% (c) Michal Bidlo, Bohuslav Křena, 2008
+
+\chapter{Úvod}\label{uvod}
+
+Úlohou tohto projektu bolo napísať program pre výukovú platformu Fitkit3 - Minerva s procesorom rady Kinetis K modelu MK60D10 vo vývojovom prostredí Kinetis Design Studio 3.0. Program zabezpečuje dáta vypočítaním 16 alebo 32 bitového CRC kódu troma rôznymi spôsobami a porovnáva ich rýchlosť a spôsob implementácie na danom prostriedku. Prvý spôsob využíva hardwarový modul Cyclic Redundancy Check (CRC) z čipu K60. Druhý spôsob pracuje s použitím polynómu z predchádzajúceho spôsobu a využitím lookup tabuľky. Posledný spôsob je čisto softwarovo založený a to na použití jednoduchého matematického polynómu pre výpočet CRC kódu. 
+
+Aplikácia zabezpečuje blok dát CRC kódom, ktorý by sa pridal do posielaných dát a príjmateľ by si následne rovnakou implementáciou CRC kódu overil, či dáta, ktoré dostal majú správny CRC kód a sú bez chyby. 
+
+
+
+\end{document}

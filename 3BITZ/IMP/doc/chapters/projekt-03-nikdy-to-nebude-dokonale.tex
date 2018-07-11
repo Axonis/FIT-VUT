@@ -1,0 +1,14 @@
+\documentclass[../projekt.tex]{subfiles}
+\begin{document}
+\chapter{Štatistiky a réžia}
+Hardwarová implementácia za použitia CRC modulu čipu K60 je jednoznačne najrýchlejšia, ako sa overilo v testoch pri väčšom vzorku vstupných dát potrebujúcich CRC súčet. Rozmýšlaľ som o implementácii vlastného čítača na vypočítanie samotnej operácie jedného CRC súčtu, ale v hardwarovej podobe by bolo nutné upraviť a prenastaviť veľa registrov a v softwarovej podobe používajúcej volania štandardnej C knižnice by to bolo až príliš pomalé. Preto bolo zvolené testovanie na väčšej vzorke a približne meraný čas vykonania. Taktiež pre podporu odhadu rýchlosti vykonania bol použitý GDB debuger a jeho rozbor kódu na inštrukcie pre približný počet inštrukcií, nutných pre vypočítanie CRC kódu. Nakoľko sa jedná len o 16 a 32 bitové CRC kódy rozdiely neboli až také obrovské, nakoľko sa jedná o relatívne malý výpočet.
+
+Hardwarová implementácia za použitia samotnej hardwarovej akcelerácie a paralelizácie bola jednoznačne najrýchlejšia s najnižším počtom inštrukcií potrebných na výpočet jednoho CRC súčtu. 
+
+Pri použití tabuľky na výpočet ktorá bola staticky definovaná dochádza k značnému spomaleniu, nakoľko nieje implementovaný žiaden druh paralelizmu a celý výpočet sa prevádza v jedinom vlákne sekvenčne.
+
+Použitie matematického polynómu pre výpočet CRC kódu je najpomalšie z daných možností, nakoľko je nutné celý výpočet previesť sekvenčne bez pomoci tabuľky, len na základe matematických operácii. Počet inštrukcií bol v tomto prípade najvyšší.
+
+Hlavný rozdiel v implementáciach a ich rýchlostiach je možnosť využitia paralelizmu pre hardwarový výpočet. Aj pri použití softwarového paralelizmu by sme neboli schopný dosiahnuť rýchlosť hardwarového riešenia.
+
+\end{document}

@@ -1,0 +1,40 @@
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6500 64-bit) (preloaded format=pdflatex 2017.12.16)  29 DEC 2017 14:59
+entering extended mode
+**./projekt-02-nekolik-.tex
+(projekt-02-nekolik-.tex
+LaTeX2e <2017-04-15>
+Babel <3.15> and hyphenation patterns for 75 language(s) loaded.
+(C:\Users\Axonis\AppData\Roaming\MiKTeX\2.9\tex\latex\subfiles\subfiles.cls
+Document Class: subfiles 2012/05/23 Federico Garcia
+("C:\Program Files\MiKTeX 2.9\tex\latex\tools\verbatim.sty"
+Package: verbatim 2014/10/28 v1.5q LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks14
+\verbatim@line=\toks15
+\verbatim@in@stream=\read1
+)
+Preamble taken from file `../projekt.tex'
+(../projekt.tex
+
+! LaTeX Error: File `fitthesis.cls' not found.
+
+Type X to quit or <RETURN> to proceed,
+or enter new name. (Default extension: cls)
+
+Enter file name: 
+! Emergency stop.
+<read *> 
+         
+l.33 
+      
+*** (cannot \read from terminal in nonstop modes)
+
+ 
+Here is how much of TeX's memory you used:
+ 60 strings out of 493312
+ 1412 string characters out of 3138895
+ 53761 words of memory out of 3000000
+ 3693 multiletter control sequences out of 15000+200000
+ 3640 words of font info for 14 fonts, out of 3000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 18i,0n,17p,196b,16s stack positions out of 5000i,500n,10000p,200000b,50000s
+!  ==> Fatal error occurred, no output PDF file produced!

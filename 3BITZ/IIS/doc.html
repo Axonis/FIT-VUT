@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html><head>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-2">
+    <title>Projekt IIS</title>
+    <style type="text/css">
+    	table { border-collapse: collapse; }
+    	td, th { border: 1px solid black; padding: 0.3em 0.5em; text-align: left; }
+    	dt { font-weight: bold; margin-top: 0.5em; }
+    </style>
+</head>
+<body>
+
+<!-- Zkontrolujte prosím nastavení kódování v hlavičce dokumentu 
+     podle použitého editoru -->
+
+<h1>Bug Tracker</h1> <!-- Nahradte názvem svého zadání -->
+
+<dl>
+	<dt>Autoři</dt>
+	<dd>První jméno <!-- Nahraďte skutečným jménem a e-mailem autora a popisem činnosti -->
+	    <a href="mailto:xurban66@stud.fit.vutbr.cz">xurban66@stud.fit.vutbr.cz</a> -
+		správa uživatelů, uživatelské rozhraní a databázový subsystém
+	</dd>
+	<dd>Druhé jméno <!-- Nahraďte skutečným jménem a e-mailem autora a popisem činnosti -->
+	    <a href="mailto:xtomas32@stud.fit.vutbr.cz">xtomas32@stud.fit.vutbr.cz</a> -
+		správa uživatelů, uživatelské rozhraní a databázový subsystém
+	</dd>
+	<dt>URL aplikace</dt>
+	<dd><a href="http://www.stud.fit.vutbr.cz/~xautor01/IIS">http://www.stud.fit.vutbr.cz/~xautor01/IIS</a></dd>
+</dl>
+
+<h2>Uživatelé systému pro testování</h2>
+<table>
+<tbody><tr><th>Login</th><th>Heslo</th><th>Role</th></tr>
+<tr><td>admin@bug.dev</td><td>adminadmin</td><td>Administrátor</td></tr>
+<tr><td>programmer@bug.dev</td><td>programmer</td><td>Programátor</td></tr>
+<tr><td>user@bug.dev</td><td>useruser</td><td>Užívateľ</td></tr>
+</tbody></table>
+
+<h2>Implementace</h2>
+<p>
+	Aplikácia bola implementovaná v jazykoch HTML, CSS, PHP, JavaScript a SQL.
+	Využili sme voľne dostupný PHP framework Laravel, na uľahčenie práce s databázou,
+	rozšírené backendové funkcie a jednoduché zobrazovanie frontendu za pomoci funkcií integrovaných
+	do Laravelu. Správa užívateľov je uľahčená vďaka autorizačným metódam, ktoré používa Laravel.
+	Databáza je vygenerovaná z migrácii z Laravelu, do ktorého sme prepísali vytvorenie tabuliek.
+	Rýchlejší vývoj na strane frontend bol zaistený cez framework Bootstrap a pre lepšie zobrazenie
+	tabuliek na frontende sme použili framework dataTables, ktorý stavia na použití Bootstrapu.
+</p>
+
+<h3>UCD a ERD</h3>
+<p>
+	Use-case je od zhodný s predchádzajúcimi projektami, upravili sme len ER diagram, ktorý nám úplne
+	nesedel do návrhu, nakoľko by sme nemali moc informácii o samotnom tickete a bugu, tak sme im pridali popis
+	a odstránili popisy z tabuľky, ktorá ich prepájala. V ostatných prípadoch sa jedná o jednoduché pridanie
+	atribútov, aby sme mali viac informácii o testoch a patchoch.
+</p>
+<a href="http://www.stud.fit.vutbr.cz/~xurban66/ER.jpg">
+	http://www.stud.fit.vutbr.cz/~xurban66/ER.jpg
+</a>
+
+<h2>Právomoci užívateľov</h2>
+
+<h4>User</h4>
+<ul>
+	<li>Vytvoriť ticket</li>
+	<li>Vytvoriť patch</li>
+	<li>Zobraziť si bugy alebo samotný bug</li>
+	<li>Zobraziť si tickety alebo samotný ticket</li>
+	<li>Zobraziť si testy alebo samotný test</li>
+	<li>Zobraziť si moduly alebo samotný modul</li>
+	<li>Zobraziť si profil užívateľa v systéme</li>
+	<li>Vyhľadávať v bugoch, testoch, ticketoch a moduloch</li>
+
+</ul>
+
+<h4>Programmer</h4>
+<ul>
+	<li>Všetky predchádzajúce právomoci</li>
+	<li>Akceptovať ticket a meniť jeho stavy</li>
+	<li>Na dashboard vidieť tickety, ktoré má pridelené a nové tikety na moduloch, za ktoré zodpovedá</li>
+	<li>Vytvárať a hodnotiť testy</li>
+	<li>Upravovať informácie o </li>
+</ul>
+
+<h4>Admin</h4>
+<ul>
+	<li>Všetky predchádzajúce právomoci</li>
+	<li>Možnosť zmeniť profil programátorov a užívateľov</li>
+	<li>Odmenenie užívateľa</li>
+	<li>Vytvorenie modulu</li>
+</ul>
+
+
+<h3>Migrácie</h3>
+Migrácie pre databázové objekty sú navrhnuté v priečinku <b>database/migrations/</b>
+
+<h3>Html šablóna a stránky</h3>
+Všetky html šablóny projektu sa nachádzajú v <b>resources/views/</b>,
+kde sú následne rozdelené podľa jednotlivých stránok.
+
+<h3>Implementácia prípadov užitia</h3>
+<p>
+	Aplikácia je rozdelená do modulov podľa ich funkcionality.
+	Backend je napísaný ku všetkým modulom v <b>app/Http/Controllers/</b>
+</p>
+
+
+<h2>Instalace</h2>
+<ul>
+<li>Laravel 5+</li>
+<li>PHP 7+</li>
+<li>Composer</li>
+<li>JQuery 2+</li>
+<li>php artisan config:cache - optimalizovať rýchlosť načítania konfiguráčných súborov</li>
+<li>php artisan route:cache - optimalizovať rýchlosť načítania ciest</li>
+<li>php artisan migrate - vytvoriť databázu</li>
+<li>Nahrať dáta do DB cez dotazy v súbore db1.sql</li>
+</ul>
+
+<p>Prípadný <a href="https://medium.com/laravel-news/the-simple-guide-to-deploy-laravel-5-application-on-shared-hosting-1a8d0aee923e">návod</a> na nainštalovanie Laravel aplikácie na server</p>
+
+<h2>Známé problémy</h2>
+<p>Všetky úkony z Use Case Diagramu boli implementované a chyby neboli odhalené počas testovania.</p>
+
+
+
+</body></html>

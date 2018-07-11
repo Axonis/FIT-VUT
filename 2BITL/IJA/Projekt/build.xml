@@ -1,0 +1,37 @@
+<project>
+	<target name="clean">
+		<delete includeemptydirs="true">
+			<fileset dir="build" includes="**/*"/>
+		</delete>
+		<delete includeemptydirs="true">
+			<fileset dir="dest-client" includes="**/*"/>
+		</delete>
+		<delete includeemptydirs="true">
+			<fileset dir="doc" includes="**/*"/>
+		</delete>
+	</target>
+
+	<target name="compile">
+		<javac srcdir="src" destdir="build"/>
+		<jar destfile="dest-client/ija2016-client.jar" basedir="build">
+			<manifest>
+				<attribute name="Main-Class" value="gui.Board"/>
+			</manifest>
+			<fileset dir="lib">
+				<include name="img/**" />
+			</fileset>
+		</jar>
+		<javadoc packagenames="src" sourcepath="src" destdir="doc">
+			<fileset dir="src">
+				<include name="**" />
+				<exclude name="**/img/**" />
+				<exclude name="**/*.form" />
+			</fileset>
+		</javadoc>
+	</target>
+
+	<target name="run">
+		<java jar="dest-client/ija2016-client.jar" fork="true"/>
+	</target>
+
+</project>
