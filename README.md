@@ -19,14 +19,14 @@ Some projects are missing, as they're not that helpful or presentable due to bad
     INC - 19/20
     IOS - 1. - 15/15
           2. - 15/15
-    IZG - Cvičenia - 16/18
-          Projekt - 17/18
+    IZG - Excercies - 16/18
+          Project - 17/18
          
 ## 3.semester - 2BITZ
 
     IAL - 1. - 10/10
           2. - 10/10
-    IFJ - 21/20 + 4/5 dokumentácia
+    IFJ - 21/20 + 4/5 doc
     INP - 1. - 10/10
           2. - 23/23
     ISS - 12/12
@@ -43,7 +43,7 @@ Some projects are missing, as they're not that helpful or presentable due to bad
     IJA - 1. - 4/4
           2. - 4/4
           3. - 2/2
-          Projekt - 77/90
+          Project - 77/90
     ITY - 1. - 9.8/10
           2. - 13.5/15
           3. - 13.5/15
