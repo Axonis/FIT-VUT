@@ -1,5 +1,7 @@
 # FIT-VUT
 
+# Some projects are missing, as they're not that helpful or presentable due to bad code structure, etc.
+
 ## 1.semester - 1BITZ
 
     IDA - 10/10
