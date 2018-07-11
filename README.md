@@ -17,14 +17,14 @@
     INC - 19/20
     IOS - 1. - 15/15
           2. - 15/15
-    IZG - Cvičenia - 16/18 (3. a 6. cvičenia za 2/3)
+    IZG - Cvičenia - 16/18
           Projekt - 17/18
          
 ## 3.semester - 2BITZ
 
     IAL - 1. - 10/10
           2. - 10/10
-    IFJ - 21/20 + 4/5 dokumentácia (nahrala sa stará verzia dokumentácie)
+    IFJ - 21/20 + 4/5 dokumentácia
     INP - 1. - 10/10
           2. - 23/23
     ISS - 12/12
@@ -32,7 +32,7 @@
 
 ## 4.semester - 2BITL
     
-    IDS - 1. - 3/5
+    IDS - 1. - 3/5 ()
           2. - 5/5
           3. - 4/5
           4.+5. - 15/19 
