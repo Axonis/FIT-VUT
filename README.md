@@ -1,5 +1,7 @@
 # FIT-VUT
 
+Some projects are missing, as they're not that helpful or presentable due to bad code structure, etc.
+
 ## 1.semester - 1BITZ
 
     IDA - 10/10
@@ -17,14 +19,14 @@
     INC - 19/20
     IOS - 1. - 15/15
           2. - 15/15
-    IZG - Cvičenia - 16/18 (3. a 6. cvičenia za 2/3)
+    IZG - Cvičenia - 16/18
           Projekt - 17/18
          
 ## 3.semester - 2BITZ
 
     IAL - 1. - 10/10
           2. - 10/10
-    IFJ - 21/20 + 4/5 dokumentácia (nahrala sa stará verzia dokumentácie)
+    IFJ - 21/20 + 4/5 dokumentácia
     INP - 1. - 10/10
           2. - 23/23
     ISS - 12/12
@@ -32,19 +34,26 @@
 
 ## 4.semester - 2BITL
     
-    IDS - 1. - 
-          2. -
-          3. -
-          4. -
-          5. -
-    IPK - 1. -
-          2. -
-    IPP - 1. -
-          2. - 
+    IDS - 1. - 3/5
+          2. - 5/5
+          3. - 4/5
+          4.+5. - 15/19 
+    IPK - 20/20
+    IPP - 10/10
     IJA - 1. - 4/4
-          2. -
+          2. - 4/4
+          3. - 2/2
+          Projekt - 77/90
     ITY - 1. - 9.8/10
-          2. -
-          3. -
-          4. -
-          5. -
+          2. - 13.5/15
+          3. - 13.5/15
+          4. - 13/15
+          5. - 15/15
+          
+## 5.semester - 3BITZ
+    
+    IIS - 27/30
+    IMP - 13/14
+    IMS - 20/20
+    ISA - 17/20
+
